@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Oct  1 11:15:38 2021
+import configparser
 
-@author: Nicolas
-"""
 
-def func():
-    x = 1
-    
-print(x)
+config = configparser.ConfigParser()
+config.read('test.ini')
+
+gpio_var = config['GPIO']
+dht11_gpio =  gpio_var.getint('dht11_gpio',23)
+dht11_gpio = 10
+with open('test.ini', 'w') as configfile:
+    config.write(configfile)

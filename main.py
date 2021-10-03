@@ -14,7 +14,7 @@ def setup():
    # getAndUpdateConfig() #On vérifie que les fichiers de configuration sont présents
       
     # GSM setup
-    gsm = gsm.initGSM()
+    gsm = initGSM()
     gsm.turnOn() #On allume le module GSM
     gsm.enterPIN() #On entre le code PIN
     gsm.setupSMS() #On setup les SMS
@@ -28,11 +28,6 @@ def setup():
     # Speech synthesis setup
     voice = initSpeechSynthesis()
     
-    
-    # Setup logger
-    logger.add("logs.txt", rotation="1 days", level="INFO", format="{time:HH:mm:ss} {message}")
-    
-  
 
     #On setup les ports I/O du TW
     io.setmode(io.BOARD)
@@ -60,6 +55,8 @@ def extinction():
 #Setup des différents modules
 setup()
 
+
+
 pic.resetWatchdogTimer() #Evite le WDT du PIC
 
 #Lecture des capteurs et du PIC
@@ -67,8 +64,8 @@ temperature, humidite, pression, altitude, hauteur_nuages, direction_vent, vites
 heure_mesures = time.strftime("%Hh%M")
 
 pic.resetWatchdogTimer()  #Evite le WDT du PIC
-logger.info("Température : ", round(temperature, 1), " °C --- Humidité : ", round(humidite), " % --- Pression : ", pression, " hPa")
-logger.info("Direction du vent : ", direction_vent, ' --- Vitesse du vent : ', vitesse_vent, ' km/h')
+logger_log.info("Température : ", round(temperature, 1), " °C --- Humidité : ", round(humidite), " % --- Pression : ", pression, " hPa")
+logger_log.info("Direction du vent : ", direction_vent, ' --- Vitesse du vent : ', vitesse_vent, ' km/h')
     
 #On joue le message radio
 playVoiceMessage()
@@ -79,7 +76,7 @@ sensors.saveBatteryValues(tension_batterie)
 
 #On envoie les données par Sigfox
 sigfox.sendValuesToSigFox(temperature, humidite, pression, vitesse_vent, direction_vent, tension_batterie, True)
-logger.info("Envoyé !")
+logger_log.info("Envoyé !")
 
 #Envoie l'heure au PIC (et la récupère dans la variable dateTime)
 dateTime = gsm.getDateTime() #On récupère date et heure du GSM
@@ -106,10 +103,10 @@ heure = int(dateTime[3]) if len(dateTime) == 6 else bcd2dec(pic.lecture(pic_hour
 if heure >= int(config.getHeureSleep()):
     pic.ecriture(pic_alrmcon, pic_alrmcon_sleep) #On dit que l'alarme est maintenant quotidienne
     pic.ecriture(pic_alm_hour, dec2bcd(config.getHeureEveil())) #On dit que l'heure de réveil est celle enregistrée
-    logger.info("Prochain reveil : demain")
+    logger_log.info("Prochain reveil : demain")
 else: #Sinon on redis toutes les 10 minutes
     pic.ecriture(pic_alrmcon, pic_alrmcon_eveil) #On remet l'alarme toutes les 10 minutes
-    logger.info("Prochain reveil : 10 min")
+    logger_log.info("Prochain reveil : 10 min")
                
 #On arrête le programme
 extinction()
