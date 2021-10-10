@@ -6,7 +6,7 @@ from time import sleep, localtime, asctime
 from textwrap import wrap
 import math
 import serial
-from voxpopuli import Voice
+
 import RPi.GPIO as io
 
         

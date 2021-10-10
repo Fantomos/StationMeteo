@@ -18,8 +18,8 @@ class I2C:
 
 
 class Pic:
-    def __init__(self, i2cbus, logger, i2c_address = 0x21):
-        self.i2cbus = i2cbus
+    def __init__(self, i2c_bus, logger, i2c_address):
+        self.i2cbus = i2c_bus
         self.i2c_address = i2c_address
         self.logger = logger
         self.register =	{
@@ -95,8 +95,18 @@ class Pic:
             self.writePicReg("sec", datetime[5])
         return dt
 
+    def getDateTime(self):
+        return  [bcd2dec(self.readPicReg("year")),
+                bcd2dec(self.readPicReg("month")),
+                bcd2dec(self.readPicReg("day")),
+                bcd2dec(self.readPicReg("hour")),
+                bcd2dec(self.readPicReg("min")),
+                bcd2dec(self.readPicReg("sec"))]
+
+
     def resetWatchdogTimer(self):
         self.readPicReg("year")
+
 
     #Permet de lire toutes les données du PIC concernant le vent. Renvoie 100000 en cas d'erreur.
     def readPicData(self):
@@ -114,6 +124,7 @@ class Pic:
         except:
             self.logger.error("Impossible de lire les données du PIC.")
             return 100000, 100000
+
 
 
 

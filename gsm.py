@@ -1,11 +1,10 @@
 from serial import Serial
-
+import RPi.GPIO as GPIO
 from time import sleep
-import pic
 
 
 class Gsm:
-    def __init__(self, gsm_power_gpio , pic, config, logger, baudrate = 115200, timeout = 1,):
+    def __init__(self, gsm_power_gpio , pic, config, logger, baudrate = 115200, timeout = 1):
         self.power_gpio = gsm_power_gpio
         self.command = ["batterie", "site", "nom", "debut", "début", "fin", "altitude", "logs", "data", "maitre", "maître"]
         self.logger = logger
@@ -45,13 +44,13 @@ class Gsm:
             
     #On envoie une impulsion de 2 sec sur la pin POWER du module GSM
     def power(self):
-        io.setmode(io.BOARD)
-        io.setup(self.power_gpio, io.OUT)
-        io.output(self.power_gpio, io.HIGH)
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(self.power_gpio, GPIO.OUT)
+        GPIO.output(self.power_gpio, GPIO.HIGH)
         sleep(1)
-        io.output(self.power_gpio, io.LOW)
+        GPIO.output(self.power_gpio, GPIO.LOW)
         sleep(1)
-        io.setup(self.power_gpio, io.IN)
+        GPIO.setup(self.power_gpio, GPIO.IN)
 
     #Allume le module GSM (power + commande vide) et renvoie le résultat d'une commande simple
     def turnOn(self):
@@ -234,7 +233,7 @@ class Gsm:
         return "Commande inconnue."
 
     #Répond à tous les SMS reçus
-    def respondToSMS(self, temperature, humidite, pression, altitude, hauteur_nuages, direction_vent, vitesse_vent, direction_vent_moy, direction_vent_max, vitesse_vent_moy, vitesse_vent_max, heure_mesures):
+    def respondToSMS(self, sensorsData):
         if self.getSMSCount() > 0: #Si on a reçu des SMS
             indexes = self.getSMSIndexes() #On récupère la liste des indices des SMS
             for index in indexes[:20]: #On les parcourt
@@ -252,7 +251,7 @@ class Gsm:
                     self.sendSMS(sms[1], "Vous etes désormais le nouveau responsable de la station.")
                     self.config.setGsmMaster(sms[1])
                 elif status == 0: #Si ce n'est pas une des 3 possibilités, on renvoie le sms contenant les infos
-                    self.sendSMS(sms[1], self.createSMS(temperature, vitesse_vent_moy, vitesse_vent_max, direction_vent_moy, direction_vent_max, pression, humidite, hauteur_nuages, heure_mesures))
+                    self.sendSMS(sms[1], self.createSMS(sensorsData))
                 sleep(0.1)
                 #pic.resetWatchdogTimer()
             #On supprime tous les SMS
@@ -260,25 +259,25 @@ class Gsm:
             sleep(3)
         
         #On mesure la tension de la batterie, et s'il elle sous le seuil d'alerte, on envoie un message
-        tension_batterie = self.pic.readPicReg("battery") / 10
-        if tension_batterie <= self.config.getBatteryLimit():
-            self.sendSMS(self.config.getGsmMaster(), "[" + heure_mesures + "]\n/!\\ La tension de la batterie est faible (" + str(tension_batterie) + " V), la station risque de ne plus fonctionner correctement. /!\\")
+        voltage = sensorsData['Voltage']
+        if voltage <= self.config.getBatteryLimit():
+            self.sendSMS(self.config.getGsmMaster(), "[" +  sensorsData['Time'] + "]\n/!\\ La tension de la batterie est faible (" + str(voltage) + " V), la station risque de ne plus fonctionner correctement. /!\\")
 
 
 
     #Crée le String à envoyer par SMS pour transmettre les informations
         #Pour chaque valeur, on écrit "n/a" si la valeur n'a pas été trouvée
-    def createSMS(self, temperature, vitesse_moy, vitesse_max, direction_moy, direction_max, pression, humidite, hauteur_nuages, heure_mesures):
-        temperature = str(round(temperature, 1)) if float(temperature) < 1000 else "n/a"
-        vitesse_moy = str(int(vitesse_moy)) if int(vitesse_moy) < 1000 else "?"
-        vitesse_max = str(int(vitesse_max)) if int(vitesse_max) < 1000 else "?"
-        direction_moy = direction_moy if int(direction_moy) < 1000 else 16
-        direction_max = direction_max if int(direction_max) < 1000 else 16
-        pression = str(int(pression)) if int(pression) < 10000 else "n/a"
-        humidite = str(int(humidite)) if int(humidite) < 1000 else "n/a"
-        hauteur_nuages = str(int(hauteur_nuages)) if int(hauteur_nuages) < 10000 else "n/a"
+    def createSMS(self, sensorsData):
+        temperature = str(round(sensorsData['Temperature'], 1)) if float(sensorsData['Temperature']) < 1000 else "n/a"
+        vitesse_moy = str(int(sensorsData['Speed'])) if int(sensorsData['Speed']) < 1000 else "?"
+        vitesse_max = str(int(sensorsData['Speed_max'])) if int(sensorsData['Speed_max']) < 1000 else "?"
+        direction_moy = sensorsData['Direction'] if int(sensorsData['Direction']) < 1000 else 16
+        direction_max = sensorsData['DIrection_max'] if int(sensorsData['Direction_max']) < 1000 else 16
+        pression = str(int(sensorsData['Pressure'])) if int(sensorsData['Pressure']) < 10000 else "n/a"
+        humidite = str(int(sensorsData['Humidity'])) if int(sensorsData['Humidity']) < 1000 else "n/a"
+        hauteur_nuages = str(int(sensorsData['Cloud'])) if int(sensorsData['Cloud']) < 10000 else "n/a"
         
-        output = "[" + str(heure_mesures) + "]\n"
+        output = "[" + str(sensorsData['Time']) + "]\n"
         output += "Temp: " + temperature + " C\n"
         output += "Vent moy: " + vitesse_moy + "km/h " + direction_moy + "° \n"
         output += "Vent max: " + vitesse_max + "km/h " + direction_max + "° \n"

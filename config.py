@@ -1,5 +1,5 @@
 from configparser import ConfigParser
-from loguru import logger
+
 
 
 class ConfigFile:
@@ -61,45 +61,8 @@ class ConfigFile:
     def getSiteAltitude(self, altitude):
         return self.subconfig.getint("altitude", 0)
 
-    
-gsm_power_gpio = 12
-dht11_gpio =  23
-cmd_tw_gpio = 29
-ptt_gpio = 31
-extinction_gpio = 22
-
-tts_speed = 120
-tts_pitch = 30
-
-nuages_dewb = 237.7
-nuages_dewa = 17.27
-nuages_K = 122.7
-
-mesures_nbtry = 5
-mesures_nbmesures = 1
-
-gsm_commands = ["batterie", "site", "nom", "debut", "début", "fin", "altitude", "logs", "data", "maitre", "maître"]
-
-#Paramètres Sigfox
 
 
-sigfox_addr = 0x55
-pic_addr = 0x21
-
-
-###REGISTRES DU PIC
-#Registres liés à la date
-
-
-
-logger.add("logs.txt", rotation="1 days", level="INFO", format="{time:HH:mm:ss} {message}", filter=lambda record: record["extra"]["type"] == "LOG")
-logger.add("data.txt", rotation="1 days", level="INFO", format="{time:HH:mm:ss} {message}", filter=lambda record: record["extra"]["type"] == "DATA")
-logger.add("battery.txt", rotation="1 days", level="INFO", format="{time:HH:mm:ss} {message}", filter=lambda record: record["extra"]["type"] == "BATTERY")
-
-
-logger_log = logger.bind(type="LOG")
-logger_data = logger.bind(type="DATA")
-logger_battery = logger.bind(type="BATTERY")
 
 
 def getNLogs(n):
