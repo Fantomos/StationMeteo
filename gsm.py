@@ -1,15 +1,14 @@
 from serial import Serial
 import RPi.GPIO as GPIO
-from time import sleep
+from time import sleep, mktime
 
 
 class Gsm:
-    def __init__(self, gsm_power_gpio , pic, config, logger, baudrate = 115200, timeout = 1):
+    def __init__(self, gsm_power_gpio , config, logger, baudrate = 115200, timeout = 1):
         self.power_gpio = gsm_power_gpio
         self.command = ["batterie", "site", "nom", "debut", "début", "fin", "altitude", "logs", "data", "maitre", "maître"]
         self.logger = logger
         self.config = config
-        self.pic = pic
         try:
             self.bus = Serial("/dev/ttyS0", baudrate, timeout)
         except:
@@ -102,11 +101,13 @@ class Gsm:
         buffer = self.sendAT("+CCLK?") #On récupère la date et heure du module GSM
         if len(buffer) > 17: #Si on a bien tout reçu, on le renvoie, sinon on renvoie un tableau vide
             datetime = buffer.split("\"")[1]
-            date = datetime.split(",")[0]
-            time = datetime.split(",")[1].split("+")[0]
-            return date.split("/") + time.split(":")
+            date = datetime.split(",")[0].split("/")
+            clock = datetime.split(",")[1].split("+")[0].split(":")
+            date[2] = "20" + date[2]
+            return mktime((int(date[2]), int(date[1]), int(date[0]), int(clock[0]), int(clock[1]), int(clock[2]), 0, 0, -1))
         else:
-            return []
+            self.logger.error("Impossible d'obtenir la date et heure depuis le module GSM")
+            return 0
         
     #Renvoie le nombre de SMS dans la mémoire de la carte
     #on reçoit une réponse sous la forme "+CPMS: x,y,x,y,x,y", où x est le nombre de message stocké et y la capacité
@@ -175,13 +176,13 @@ class Gsm:
             return -1
 
     #Exécute une commande de lecture de paramètre à partir du texte du sms et renvoie la réponse
-    def executeGetCommand(self, command):
+    def executeGetCommand(self, command, sensorsData):
         #On récupère ce qui est avant le ?, on le met en minuscule et on enlève les espaces avant et après
         word = command.split("?")[0].lower().strip()
         print("command : " + word)
         #Selon la commande, on effectue différentes actions
         if word == "batterie":
-            return str(self.pic.readPicReg("battery") / 10) + " V"
+            return str(sensorsData["battery"]) + " V"
         elif word == "site" or word == "nom":
             return "Site : \n" + self.config.getSiteName()
         elif word == "debut" or word == "début":
@@ -245,15 +246,14 @@ class Gsm:
                         self.sendSMS(sms[1], self.executeSetCommand(sms[0])) #On exécute la commande et on réponds le message de confirmation ou d'erreur
                     else: #Sinon, on répond que ce n'est pas possible
                         self.sendSMS(sms[1], "Vous n'avez pas la permission d'effectuer cette commande.")
-                elif status == 2: #S'il s'agit d'une commande d'écriture, on renvoie la réponse adaptée
-                    self.sendSMS(sms[1], self.executeGetCommand(sms[0]))
+                elif status == 2: #S'il s'agit d'une commande de lecture, on renvoie la réponse adaptée
+                    self.sendSMS(sms[1], self.executeGetCommand(sms[0]), sensorsData)
                 elif status == 3: #S'il s'agit du mot de passe
                     self.sendSMS(sms[1], "Vous etes désormais le nouveau responsable de la station.")
                     self.config.setGsmMaster(sms[1])
                 elif status == 0: #Si ce n'est pas une des 3 possibilités, on renvoie le sms contenant les infos
                     self.sendSMS(sms[1], self.createSMS(sensorsData))
                 sleep(0.1)
-                #pic.resetWatchdogTimer()
             #On supprime tous les SMS
             self.deleteAllSMS()
             sleep(3)

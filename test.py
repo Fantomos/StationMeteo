@@ -1,15 +1,16 @@
-import configparser
+import time
 
 
-config = configparser.ConfigParser()
-config.read('test.ini')
+buffer = "\"16/12/20,16:01:27+22\""
+datetime = buffer.split("\"")[1]
+date = datetime.split(",")[0].split("/")
+clock = datetime.split(",")[1].split("+")[0].split(":")
+date[2] = "20" + date[2]
+epochTime= time.mktime((int(date[2]), int(date[1]), int(date[0]), int(clock[0]), int(clock[1]), int(clock[2]), 0, 0, -1))
 
-gpio_var = config['GPIO']
-dht11_gpio =  gpio_var.getint('dht11_gpio',23)
-dht11_gpio = 10
-with open('test.ini', 'w') as configfile:
-    config.write(configfile)
+a = int(epochTime).to_bytes(4, 'big')
 
-dateTime = [2,2,4]
+b = int.from_bytes(a, byteorder='big', signed=False)
 
-print(dateTime[0])
+
+print(b)

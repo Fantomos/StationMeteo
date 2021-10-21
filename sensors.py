@@ -6,11 +6,10 @@ import math
 
 
 class Sensors:
-    def __init__(self, config, logger, logger_data, pic, dht11_gpio, mesures_nbtry, nbmesures):
+    def __init__(self, config, logger, logger_data, dht11_gpio, mesures_nbtry, nbmesures):
         self.config = config
         self.logger = logger
         self.logger_data = logger_data
-        self.pic = pic
         self.dht11_gpio = dht11_gpio
         self.nbmesures = nbmesures
         for i in range(mesures_nbtry):
@@ -89,7 +88,7 @@ class Sensors:
 
 
     #Fonction qui permet de lire toutes les valeurs des capteurs et de tout renvoyer en un seul tableau.
-    def getSensorsData(self):
+    def getRPISensorsData(self):
         #Température, humidité, pression, altitude
         #Pour chaque grandeur, on l'ajoute au tableau seulement si elle n'est pas trop grande, ce qui indiquerait un problème de mesure
         T, H, P, A = [], [], [], []
@@ -107,18 +106,12 @@ class Sensors:
             if donnees_baro[1] < 65536:
                 A.append(donnees_baro[1])
             sleep(0.1)
-            print(i)
-            #resetWatchdogTimer()
-        
-        wind_data = self.pic.readPicData() #On lit les données du PIC
-        battery_voltage = self.pic.readPicReg("battery")/10
-        #windData = [16, 0.0]
         
         #On renvoie un tableau contenant toutes les gradeurs moyennées
-        sensorsData = {"Time":time.strftime("%Hh%M"),"Temperature":average(T),"Humidity":average(H),"Pressure":average(P), "Altitude":average(A), "Cloud":self.getCloudBase(average(T), average(H)), "Direction":wind_data[0], "Speed":wind_data[1], "Direction_max":wind_data[2], "Speed_max":wind_data[3], "Voltage":battery_voltage}
-        self.logger_data.info(",".join([str(d) for d in sensorsData]))
+        rpiSensorsData = {"Time":time.strftime("%Hh%M"), "Temperature":average(T),"Humidity":average(H),"Pressure":average(P), "Altitude":average(A), "Cloud":self.getCloudBase(average(T), average(H))}
+        self.logger_data.info(",".join([str(d) for d in rpiSensorsData]))
 
-        return sensorsData
+        return rpiSensorsData
 
    
 
