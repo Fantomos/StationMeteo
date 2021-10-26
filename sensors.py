@@ -38,6 +38,7 @@ class Sensors:
         for i in range(mesures_nbtry):
             try:
                 self.barometre = BMP085() #On tente d'établir la connexion
+                self.barometre.seaLevel(ALTITUDE A METTRE)
             except: #Si ça ne marche pas on attend avant de rententer
                 self.barometre = None
                 self.logger.error("Impossible de se connecter au baromètre, essai " + str(i+1) + "/" + str(mesures_nbtry) + ".")
@@ -92,7 +93,7 @@ class Sensors:
     def getRPISensorsData(self):
         #Température, humidité, pression, altitude
         #Pour chaque grandeur, on l'ajoute au tableau seulement si elle n'est pas trop grande, ce qui indiquerait un problème de mesure
-        T, H, P, A = [], [], [], []
+        T, H, P = [], [], [], []
         for i in range(self.nbmesures):
             self.logger.info("Début des mesures : " + str(i+1) +"/"+ str(self.nbmesures))
             temp = self.readThermometer()
@@ -104,11 +105,10 @@ class Sensors:
             donnees_baro = self.readBarometer()
             if donnees_baro[0]/100 != 0:
                 P.append(donnees_baro[0]/100)
-            if donnees_baro[1] != 0:
-                A.append(donnees_baro[1])
+
         
         #On renvoie un tableau contenant toutes les gradeurs moyennées
-        rpiSensorsData = {"Time":time.strftime("%Hh%M"), "Temperature":average(T),"Humidity":average(H),"Pressure":average(P), "Altitude":average(A), "Cloud":self.getCloudBase(average(T), average(H))}
+        rpiSensorsData = {"Time":time.strftime("%Hh%M"), "Temperature":average(T),"Humidity":average(H),"Pressure":average(P), "Cloud":self.getCloudBase(average(T), average(H))}
 
         return rpiSensorsData
 

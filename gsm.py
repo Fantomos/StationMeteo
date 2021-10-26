@@ -283,14 +283,14 @@ class Gsm:
     #Crée le String à envoyer par SMS pour transmettre les informations
         #Pour chaque valeur, on écrit "n/a" si la valeur n'a pas été trouvée
     def createSMS(self, sensorsData):
-        temperature = str(round(sensorsData['Temperature'], 1)) if float(sensorsData['Temperature']) < 1000 else "n/a"
-        vitesse_moy = str(int(sensorsData['Speed'])) if int(sensorsData['Speed']) < 1000 else "?"
-        vitesse_max = str(int(sensorsData['Speed_max'])) if int(sensorsData['Speed_max']) < 1000 else "?"
-        direction_moy = sensorsData['Direction'] if int(sensorsData['Direction']) < 1000 else 16
-        direction_max = sensorsData['DIrection_max'] if int(sensorsData['Direction_max']) < 1000 else 16
-        pression = str(int(sensorsData['Pressure'])) if int(sensorsData['Pressure']) < 10000 else "n/a"
-        humidite = str(int(sensorsData['Humidity'])) if int(sensorsData['Humidity']) < 1000 else "n/a"
-        hauteur_nuages = str(int(sensorsData['Cloud'])) if int(sensorsData['Cloud']) < 10000 else "n/a"
+        temperature = str(round(sensorsData['Temperature'], 1)) if float(sensorsData['Temperature']) != 0 else "n/a"
+        vitesse_moy = str(int(sensorsData['Speed']))
+        vitesse_max = str(int(sensorsData['Speed_max']))
+        direction_moy = sensorsData['Direction']
+        direction_max = sensorsData['DIrection_max']
+        pression = str(int(sensorsData['Pressure'])) if int(sensorsData['Pressure']) != 0 else "n/a"
+        humidite = str(int(sensorsData['Humidity'])) if int(sensorsData['Humidity']) != 0 else "n/a"
+        hauteur_nuages = str(int(sensorsData['Cloud'])) if int(sensorsData['Cloud']) != 0 else "n/a"
         
         output = "[" + str(sensorsData['Time']) + "]\n"
         output += "Temp: " + temperature + " C\n"
