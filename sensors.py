@@ -1,7 +1,7 @@
 from Adafruit_BMP.BMP085 import BMP085
 import Adafruit_DHT as DHT
 from w1thermsensor import W1ThermSensor
-from time import sleep, time
+import time
 import math
 
 
@@ -12,15 +12,16 @@ class Sensors:
         self.logger_data = logger_data
         self.dht11_gpio = dht11_gpio
         self.nbmesures = nbmesures
+        self.logger.info("Tentative de connexion aux capteurs...")
         for i in range(mesures_nbtry):
             try:
                 self.hygrometre = DHT.DHT11
             except: #Si ça ne marche pas on attend avant de rententer
                 self.hygrometre = None
-                self.logger.error("Impossible de se connecter à l'hygromètre, essai " + str(i) + "/" + str(mesures_nbtry) + ".")
-                sleep(1)
+                self.logger.error("Impossible de se connecter à l'hygromètre, essai " + str(i+1) + "/" + str(mesures_nbtry) + ".")
+                time.sleep(1)
             else: #Si ça marche on sort de la boucle
-                self.logger.success("Thermomètre connecté")
+                self.logger.success("Hygromètre connecté")
                 break
 
         for i in range(mesures_nbtry):
@@ -28,8 +29,8 @@ class Sensors:
                 self.thermometre = W1ThermSensor() #On tente d'établir la connexion
             except: #Si ça ne marche pas on attend avant de rententer
                 self.thermometre = None
-                self.logger.error("Impossible de se connecter au thermomètre, essai " + str(i) + "/" + str(mesures_nbtry) + ".")
-                sleep(1)
+                self.logger.error("Impossible de se connecter au thermomètre, essai " + str(i+1) + "/" + str(mesures_nbtry) + ".")
+                time.sleep(1)
             else: #Si ça marche on sort de la boucle
                 self.logger.success("Thermomètre connecté")
                 break
@@ -39,8 +40,8 @@ class Sensors:
                 self.barometre = BMP085() #On tente d'établir la connexion
             except: #Si ça ne marche pas on attend avant de rententer
                 self.barometre = None
-                self.logger.error("Impossible de se connecter au baromètre, essai " + str(i) + "/" + str(mesures_nbtry) + ".")
-                sleep(1)
+                self.logger.error("Impossible de se connecter au baromètre, essai " + str(i+1) + "/" + str(mesures_nbtry) + ".")
+                time.sleep(1)
             else: #Si ça marche on sort de la boucle
                 self.logger.success("Baromètre connecté")
                 break
@@ -56,7 +57,7 @@ class Sensors:
                 return self.barometre.read_temperature()
             except:
                 self.logger.error("Impossible de lire le thermomètre.")
-                return 100000
+                return 0
 
     #Permet de lire la température et l'humidité via l'hygromètre. Renvoie 100000 en cas d'erreur.
     def readHygrometer(self):
@@ -64,7 +65,7 @@ class Sensors:
             return DHT.read_retry(self.hygrometre, self.dht11_gpio)
         except:
             self.logger.error("Impossible de lire l'hygromètre.")
-            return 100000, 100000
+            return 0, 0
 
     #Permet de lire la pression et l'altitude via le baromètre. Renvoie 100000 en cas d'erreur.
     def readBarometer(self):
@@ -72,7 +73,7 @@ class Sensors:
             return self.barometre.read_pressure(), self.barometre.read_altitude()
         except:
             self.logger.error("Impossible de lire le baromètre.")
-            return 100000, 100000
+            return 0, 0
 
 
     #Fonction qui permet de calculer la hauteur de la base des nuages grâce à l'approximation de Magnus-Tetens
@@ -92,24 +93,22 @@ class Sensors:
         #Température, humidité, pression, altitude
         #Pour chaque grandeur, on l'ajoute au tableau seulement si elle n'est pas trop grande, ce qui indiquerait un problème de mesure
         T, H, P, A = [], [], [], []
-        self.logger.info("Début des mesures")
         for i in range(self.nbmesures):
+            self.logger.info("Début des mesures : " + str(i+1) +"/"+ str(self.nbmesures))
             temp = self.readThermometer()
-            if temp < 65536:
+            if temp != 0:
                 T.append(temp)
-            temp = self.readHygrometer()[0]
-            if temp < 256:
-                H.append(temp)
+            humi = self.readHygrometer()[0]
+            if humi is not None and humi != 0:
+                H.append(humi)
             donnees_baro = self.readBarometer()
-            if donnees_baro[0]/100 < 65536:
+            if donnees_baro[0]/100 != 0:
                 P.append(donnees_baro[0]/100)
-            if donnees_baro[1] < 65536:
+            if donnees_baro[1] != 0:
                 A.append(donnees_baro[1])
-            sleep(0.1)
         
         #On renvoie un tableau contenant toutes les gradeurs moyennées
         rpiSensorsData = {"Time":time.strftime("%Hh%M"), "Temperature":average(T),"Humidity":average(H),"Pressure":average(P), "Altitude":average(A), "Cloud":self.getCloudBase(average(T), average(H))}
-        self.logger_data.info(",".join([str(d) for d in rpiSensorsData]))
 
         return rpiSensorsData
 
@@ -118,5 +117,8 @@ class Sensors:
         
         
 def average(arr):
-    return sum(arr) / len(arr)
+    if(len(arr) == 0):
+        return 0
+    else:
+        return sum(arr) / len(arr)
 

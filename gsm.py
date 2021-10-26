@@ -1,19 +1,24 @@
-from serial import Serial
+import serial
 import RPi.GPIO as GPIO
 from time import sleep, mktime
 
 
 class Gsm:
-    def __init__(self, gsm_power_gpio , config, logger, baudrate = 115200, timeout = 1):
+    def __init__(self, gsm_power_gpio , config, logger, mesures_nbtry = 5, baudrate = 115200, timeout = 1):
         self.power_gpio = gsm_power_gpio
         self.command = ["batterie", "site", "nom", "debut", "début", "fin", "altitude", "logs", "data", "maitre", "maître"]
         self.logger = logger
         self.config = config
-        try:
-            self.bus = Serial("/dev/ttyS0", baudrate, timeout)
-        except:
-            logger.error("Impossible d'ouvrir le port série pour le module GSM.")
-            self.bus = None
+        self.logger.info("Tentative d'ouverture du port série pour le module GSM...")
+        for i in range(mesures_nbtry):
+            try:
+                self.bus = serial.Serial("/dev/ttyAMA0", baudrate, timeout = timeout)
+            except:
+                logger.error("Impossible d'ouvrir le port série pour le module GSM.")
+                self.bus = None
+            else: #Si ça marche on sort de la boucle
+                logger.success("Bus série avec le GSM ouvert")
+                break
         
 
     #Vide le buffer
@@ -79,8 +84,8 @@ class Gsm:
     #Envoie un seul SMS au numéro indiqué
     def sendSingleSMS(self, numero, txt):
         output = self.sendAT("+CMGS=\"" + numero + "\"") #On envoie le numéro
-        output += self.sendAT(txt[:159], "") #On envoie le texte du SMS
-        output += self.sendAT("\x1A", "") #On envoie le caractère de fin
+        output += self.sendAT(txt[:159]) #On envoie le texte du SMS
+        output += self.sendAT("\x1A") #On envoie le caractère de fin
         sleep(0.1)
         self.readBuffer() #On vide le buffer
         return output
@@ -98,6 +103,7 @@ class Gsm:
 
     #Renvoie la date sous la forme d'un tableau [année, mois, jour, heure, minute, seconde]
     def getDateTime(self):
+        self.logger.info("Tentative d'actualiser l'heure depuis le module GSM...")
         buffer = self.sendAT("+CCLK?") #On récupère la date et heure du module GSM
         if len(buffer) > 17: #Si on a bien tout reçu, on le renvoie, sinon on renvoie un tableau vide
             datetime = buffer.split("\"")[1]
@@ -235,9 +241,12 @@ class Gsm:
 
     #Répond à tous les SMS reçus
     def respondToSMS(self, sensorsData):
+        self.logger.info("Analyse des SMS reçus...")
         if self.getSMSCount() > 0: #Si on a reçu des SMS
             indexes = self.getSMSIndexes() #On récupère la liste des indices des SMS
+            self.logger.success(str(len(indexes)) + " SMS reçus")
             for index in indexes[:20]: #On les parcourt
+                self.logger.info("Traitement du SMS numéro" + str(index) + "...")
                 sms = self.readSMS(index) #On lit le sms (format [message, numéro])
                 print(index, sms)
                 status = self.getStatus(sms) #On récupère le status (commande, mot de passe, infos)
@@ -253,15 +262,21 @@ class Gsm:
                     self.config.setGsmMaster(sms[1])
                 elif status == 0: #Si ce n'est pas une des 3 possibilités, on renvoie le sms contenant les infos
                     self.sendSMS(sms[1], self.createSMS(sensorsData))
+                self.logger.success("Traitement du SMS numéro" + str(index) + "terminé")
                 sleep(0.1)
             #On supprime tous les SMS
-            self.deleteAllSMS()
+            try:
+                self.deleteAllSMS()
+            except:
+                self.logger.error("Erreur lors de la suppression des SMS")
+            else:
+                self.logger.success("Suppression des SMS terminée")
             sleep(3)
         
         #On mesure la tension de la batterie, et s'il elle sous le seuil d'alerte, on envoie un message
-        voltage = sensorsData['Voltage']
-        if voltage <= self.config.getBatteryLimit():
-            self.sendSMS(self.config.getGsmMaster(), "[" +  sensorsData['Time'] + "]\n/!\\ La tension de la batterie est faible (" + str(voltage) + " V), la station risque de ne plus fonctionner correctement. /!\\")
+        battery = sensorsData['Battery']
+        if battery <= self.config.getBatteryLimit():
+            self.sendSMS(self.config.getGsmMaster(), "[" +  sensorsData['Time'] + "]\n/!\\ La tension de la batterie est faible (" + str(battery) + " V), la station risque de ne plus fonctionner correctement. /!\\")
 
 
 

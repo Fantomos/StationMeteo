@@ -1,6 +1,4 @@
 from time import sleep
-from smbus2 import SMBus
-
 
 class Mkrfox:
     def __init__(self, i2c_bus, logger, i2c_address):
@@ -10,14 +8,14 @@ class Mkrfox:
         self.register =	{
             "sleep" : 0xD8,
             "eveil" : 0xD0,
-            "alarm_min_val" : 0x00,
-            "alarm_sec_val" : 0x45
+            "time" : 0x00,
+            "state" : 0x45
         }
    
 
     #Fonction permettant de lire la valeur d'un registre du PIC. Renvoie 100000 en cas d'erreur.
     def read(self, regName, length):
-        return self.i2c_bus.readReg(self.i2c_address, regName, length)
+        return self.i2c_bus.readReg(self.i2c_address, self.register[regName], length)
     
     #Ecrit une valeur donnée (data) dans un registre donné (reg)
     def write(self, regName, data, length):

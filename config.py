@@ -49,16 +49,16 @@ class ConfigFile:
     def getGsmMaster(self):
         return self.subconfig.get('gsm_master','+33780041476')
 
-    def getWakeupHour(self, hour):
+    def getWakeupHour(self):
         return self.subconfig.getint('wakeup', 10)
     
-    def getSleepHour(self, hour):
+    def getSleepHour(self):
         return self.subconfig.getint('sleep', 18)
 
-    def getSiteName(self, name):
+    def getSiteName(self):
         return self.subconfig.get("nom", 'Position inconnue')
 
-    def getSiteAltitude(self, altitude):
+    def getSiteAltitude(self):
         return self.subconfig.getint("altitude", 0)
 
 
