@@ -38,7 +38,7 @@ class Sensors:
         for i in range(mesures_nbtry):
             try:
                 self.barometre = BMP085() #On tente d'établir la connexion
-                self.barometre.seaLevel(ALTITUDE A METTRE)
+                self.barometre.seaLevel(self.config.getSiteAltitude())
             except: #Si ça ne marche pas on attend avant de rententer
                 self.barometre = None
                 self.logger.error("Impossible de se connecter au baromètre, essai " + str(i+1) + "/" + str(mesures_nbtry) + ".")
