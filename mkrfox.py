@@ -9,7 +9,8 @@ class Mkrfox:
             "sleep" : 0xD8,
             "eveil" : 0xD0,
             "time" : 0x00,
-            "state" : 0x45
+            "state" : 0x45,
+            "sensorsData" : 0x46
         }
    
 
@@ -24,49 +25,41 @@ class Mkrfox:
     #Permet d'envoyer le tableau passé en argument à Sigfox
     def formatData(self, sensorsData):
         try:
-            data = [1]
+            data = []
             #Température
-            #On passe la température de l'intervalle [-100 ; 553] à l'intervalle entier [0 ; 65536] qu'on envoie en deux octets
-            if sensorsData['Temperature'] < 65536:
-                temperature = round(100 * (sensorsData['Temperature'] + 100))
-                data.append(temperature // 256)
-                data.append(temperature % 256)
-            else:
-                data.append(255)
-                data.append(255)
+            #On passe la température de l'intervalle [-50; 205] à l'intervalle entier [0 ; 255] qu'on envoie en un octet
+            data.append(round(sensorsData['Temperature']) + 50)
+
             #Humidité
             #On envoie l'humidité directement car elle est comprise entre 0 et 100
-            data.append(round(sensorsData['Humidity']) if sensorsData['Humidity'] < 100000 else 255)
+            data.append(round(sensorsData['Humidity']))
+
             #Pression
-            #On passe la pression de l'intervalle [800 ; 1453] à l'intervalle entier [0 ; 65536] qu'on envoie en deux octets
-            if sensorsData['Pressure'] < 65536:
-                pression = round(100 * (sensorsData['Pressure'] - 800))
-                data.append(pression // 256)
-                data.append(pression % 256)
-            else:
-                data.append(255)
-                data.append(255)
+            #On envoie la pression de l'intervalle [800 ; 1453] en deux octects
+            pression = round(sensorsData['Pressure'])
+            data.append(pression // 256)
+            data.append(pression % 256)
+
             #Vitesse du vent
-            #On passe la vitesse du vent de l'intervalle [0 ; 653] à l'intervalle entier [0 ; 65536] qu'on envoie en deux octets
-            if sensorsData['Speed'] < 65536:
-                vitesse_vent = round(100 * sensorsData['Speed'])
-                data.append(vitesse_vent // 256)
-                data.append(vitesse_vent % 256)
-            else:
-                data.append(255)
-                data.append(255)
+            #On envoie la vitesse du vent de l'intervalle [0 ; 255] en un octet
+            data.append(round(sensorsData['Speed']))
+            data.append(round(sensorsData['SpeedMax']))
+
             #Direction du vent
-            #On l'envoie direction car elle est entre 0 et 16
-            data.append(round(10 * sensorsData['Direction']) if sensorsData['Direction'] < 256 else 255)
+            #On envoie la direction entre [0 ; 360] en deux octects
+            direction = round(sensorsData['Direction'])
+            data.append(direction // 256)
+            data.append(direction % 256)
+            directionMax = round(sensorsData['DirectionMax'])
+            data.append(directionMax // 256)
+            data.append(directionMax % 256)
+
             #Tension de la batterie
-            data.append(int(10 * sensorsData['Voltage']))
-            #Somme de contrôle qui vaut le mod 256 de la somme de tous les octets précédents
-            somme = 0
-            for i in range(len(data)):
-                somme += data[i]
-            somme = somme % 256
-            data.append(somme)
-            #Envoi
+            #On convertie la tension en mV sur l'intervalle [0; 65536] en deux octets
+            voltage = round(1000 * sensorsData['Battery'])
+            data.append(voltage // 256)
+            data.append(voltage % 256)
+
             return data 
         except:
             self.logger.error("Erreur lors du traitement des données pour l'envoi au réseau Sigfox.")
@@ -75,14 +68,9 @@ class Mkrfox:
     def sendData(self, sensorsData):
         data = self.formatData(sensorsData)
         try:
-            #On complète le tableau au cas où il fait moins de 12 octets
-            len_data = len(data)
-            data = data[0:self.message_length]
-            data += [1] * (self.message_length - len_data)
-            #On envoie les octets un par un par I2C
-            for i in range(self.message_length):
-                self.i2cbus.write_byte(self.i2c_address, data[i])
-            self.logger.success("Envoie reussi au réseau Sigfox")
+            self.write("sensorsData", data, 12)
         except:
             self.logger.error("Impossible d'envoyer des données au réseau Sigfox")
+        else:
+            self.logger.success("Envoie reussi au réseau Sigfox")
         

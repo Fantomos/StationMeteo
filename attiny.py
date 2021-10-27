@@ -12,4 +12,4 @@ class Attiny:
 
     
     def getWindData(self):
-        return {"Direction":0, "Speed":0, "Direction_max":0, "Speed_max":0}
+        return {"Direction":0, "Speed":0, "DirectionMax":0, "SpeedMax":0}
