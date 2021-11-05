@@ -20,7 +20,7 @@ class I2C:
         sleep(0.05) #Délai sinon ça marche pas
         try:
             buffer = self.i2cbus.read_i2c_block_data(i2c_address, reg, length)
-            self.logger.success("Donnée reçu sur le registre" + str(reg))
+            self.logger.success("Donnée " + str(buffer) + " reçu sur le registre " + str(reg))
             return int.from_bytes(buffer, byteorder='big', signed=False) 
         except:
             self.logger.error("Impossible de lire le registre " + str(reg) + " sur le PIC.")
@@ -30,6 +30,6 @@ class I2C:
     def writeReg(self, i2c_address, reg, data, length):
         try:
             self.i2cbus.write_i2c_block_data(i2c_address, reg, data.to_bytes(length, 'big'))
-            self.logger.success("Donnée transmise sur le registre" + str(reg) + ", données=" + str(data) + ")")
+            self.logger.success("Donnée transmise sur le registre " + str(reg) + ", données=" + str(data) + ")")
         except:
             self.logger.error("Impossible d'envoyer les données sur le registre " + str(reg) + ", données=" + str(data) + ")")

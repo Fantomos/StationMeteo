@@ -1,5 +1,6 @@
 #IMPORTS
 from time import sleep
+from attiny import Attiny
 from config import ConfigFile
 from gsm import Gsm
 from mkrfox import Mkrfox
@@ -7,15 +8,16 @@ from i2c import I2C
 from loguru import logger
 from sensors import Sensors
 from radio import Radio
+from attiny import Attiny
 import RPi.GPIO as GPIO
+from smbus2 import SMBus
 from os import system
 
 MESURES_TRY = 5
-NB_MESURES = 5
+NB_MESURES = 3
 CONFIG_FILENAME = "config.ini"
-MKRFOX_ADDR = 0x21
-
-SIGFOX_ADDR = 0x55
+MKRFOX_ADDR = 0x55
+ATTINY_ADDR = 0x44
 SIGFOX_MESS_LENGTH = 12
 
 TTS_SPEED = 120
@@ -35,60 +37,12 @@ logger_log = logger.bind(type="LOG")
 logger_data = logger.bind(type="DATA")
 logger_battery = logger.bind(type="BATTERY")
 
-# Initialisation du fichier de configuration
-config = ConfigFile(filename = CONFIG_FILENAME)
 
-#Initialisation du bus I2C, PIC, Sensors, GSM, Sigfox et radio
 i2c_bus = I2C(logger = logger_log, mesures_nbtry = MESURES_TRY)
 mkrfox = Mkrfox(i2c_bus = i2c_bus, logger = logger_log,  i2c_address = MKRFOX_ADDR)
-gsm = Gsm(gsm_power_gpio=GPIO_GSM_POWER, config = config, logger = logger_log, mesures_nbtry=MESURES_TRY)
-sensors = Sensors(dht11_gpio = GPIO_DHT11, config = config, logger = logger_log, logger_data=logger_data, mesures_nbtry=MESURES_TRY, nbmesures=NB_MESURES)
-radio = Radio(config = config, logger = logger_log,  speed = TTS_SPEED, pitch = TTS_PITCH, tw_gpio = GPIO_TW, ptt_gpio = GPIO_PTT)
 
 
-# Initialisation GPIO
-# GPIO.setmode(GPIO.BOARD)
-
-# # On récupère date et heure du GSM si possible, sinon on recupère sur le PIC
-# epochTime = gsm.getDateTime() 
-# if epochTime != 0:
-#     mkrfox.write("time", epochTime, 4)
-#     system("sudo date -s '@" + int(epochTime) + "'")
-#     logger_log.info("Date et heure actualisées depuis le module GSM")
-# else:
-#     mkrfox.write("time", 0, 1)
-#     sleep(1000)
-#     epochTime = mkrfox.read("time", 4)
-#     system("sudo date -s '@" + int(epochTime) + "'")
-#     logger_log.info("Date et heure actualisées depuis le module SigFox")
-
-# # Recupère les données des capteurs connectées au Raspberry
-sensorsData = sensors.getRPISensorsData()
-
-# # Récupère les données des capteurs connectées au ATTINY
-# windData = 0
-# # {"Direction":wind_data[0], "Speed":wind_data[1], "Direction_max":wind_data[2], "Speed_max":wind_data[3], "Voltage":battery_voltage}
-# sensorsData.update(windData)
-
-# # Récupère la tension de la batterie et l'enregistre dans un log
-# battery = mkrfox.read("battery", 4)/10
-# sensorsData["Battery"] = battery
-# logger_battery.info(sensorsData['Voltage'])
-
-# # Joue le message audio sur la radio
-# radio.playVoiceMessage(sensorsData)
-
-# # Envoie les données via Sigfox
-# sigfox.sendData(sensorsData)
-
-# # Envoie les données via SMS
-# gsm.respondToSMS(sensorsData)
-# gsm.turnOff() #On éteint le module GSM
-        
-# #On arrête le programme
-# mixer.quit()
-GPIO.cleanup()
-# mkrfox.write("state", 2) 
-# system("sudo shutdown -h now") #On éteint la Rpi
-
-
+epochtime = 1635505843
+mkrfox.write("time", epochtime, 4) 
+sleep(1)
+print(mkrfox.read("time", 4))

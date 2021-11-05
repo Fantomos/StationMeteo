@@ -28,7 +28,7 @@ class Mkrfox:
             data = []
             #Température
             #On passe la température de l'intervalle [-50; 205] à l'intervalle entier [0 ; 255] qu'on envoie en un octet
-            data.append(round(sensorsData['Temperature']) + 50)
+            data.append(abs(round(sensorsData['Temperature']) + 50))
 
             #Humidité
             #On envoie l'humidité directement car elle est comprise entre 0 et 100
