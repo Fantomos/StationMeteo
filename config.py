@@ -5,7 +5,7 @@ from configparser import ConfigParser
 #  Cette classe permet d'extraire et de sauvegarder les données suivantes dans un dans un fichier de configuration sur la carte SD : 
 #  numéro de téléphone maître, mot de passe maître, heure de réveil et de sommeil, nom et altitude de la station, seuil de batterie. 
 #  Ainsi, même lorsque le Raspberry Pi est éteint, les données sont conservées.
-#  Basé sur la bibliothèque ConfigParser.
+#  Utilise la bibliothèque ConfigParser.
 class ConfigFile:
 
     ## Constructeur. Prends en paramètre le nom du fichier de configuration.
