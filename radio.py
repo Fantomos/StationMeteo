@@ -6,11 +6,25 @@ environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 from pygame import mixer
 import RPi.GPIO as GPIO
 
+## Classe Radio. 
+#  Cette classe permet la communication du rapport météo par la radio. Elle utilise une synthèse vocale sous le nom de Voxpopuli. La fonction mixer de PyGame est utilisé pour lire les fichiers audios générés.
 class Radio:
+    
+    ## Constructeur.
+    # @param config Objet ConfigFile.
+    # @param logger Logger principal.
+    # @param speed Vitesse de la lecture du message par la synthèse vocale. La valeur par défaut est 100.
+    # @param pitch Pitch de la lecture du message par la synthèse vocale. La valeur par défaut est 40.
+    # @param tw_gpio Numéro de pin pour alimenter le talkie-walkie. La valeur par défaut est 29.
+    # @param ptt_gpio Numéro de pin pour le push-to-talk du talkie-walkie. La valeur par défaut est 31.
     def __init__(self, config, logger, speed = 100, pitch = 40, tw_gpio = 29, ptt_gpio = 31):
+        ##  Objet ConfigFile.
         self.config = config
+        ##  Logger principal.
         self.logger = logger
+        ## Numéro de pin pour alimenter le talkie-walkie.
         self.tw_gpio = tw_gpio
+        ## Numéro de pin pour le push-to-talk du talkie-walkie.
         self.ptt_gpio = ptt_gpio
 
         # Configure les pins en sortie
@@ -18,14 +32,16 @@ class Radio:
         GPIO.setup(self.tw_gpio, GPIO.OUT)
         GPIO.setup(self.ptt_gpio, GPIO.OUT)
         try:
+            ## Référence de l'objet Voice de la synthèse vocale
             self.voice = Voice(lang="fr", voice_id=1, speed=speed, pitch=pitch)
             mixer.init(frequency=16000) #Initialisation du lecteur audio à 16kHz d'échantillonnage pour correspondre aux fichiers audio
         except:
             self.logger.error("Impossible de charger la synthèse vocale ou le codec audio")
             self.voice = None
 
-    #Crée le message qui sera lu par la radio
-    #Pour chaque valeur, on écrit "erreur" si la valeur n'a pas été trouvée
+    ## Crée le message qui sera lu par la radio. Pour chaque valeur, on écrit "erreur" si elle n'est pas acccessible.
+    # @param sensorsData Les données des capteurs.
+    # @return Retourne le message sous la forme d'une chaîne de caractère.
     def createRadioMessage(self,sensorsData):
         temperature = str(round(sensorsData['Temperature'], 1)).replace(".", ",").replace(",0", "") if float(sensorsData['Temperature']) < 100 else "erreur"
         direction = str(round(sensorsData['Direction'],0)) if float(sensorsData['Direction']) < 1000 else "erreur"
@@ -39,7 +55,8 @@ class Radio:
         return output
 
 
-    #Joue le message sonore par la radio, et gère la partie I/O associée
+    ## Joue le message sonore par la radio, et gère la partie I/O associée.
+    # @param sensorsData Les données des capteurs.
     def playVoiceMessage(self, sensorsData):
         self.logger.info("Lecture du message audio...")
         if self.voice != None:
@@ -68,7 +85,8 @@ class Radio:
             self.logger.error("Impossible de jouer le message audio car les modules ne sont pas initialisés.")
             
 
-    #Joue un son à partir de son chemin d'accès. On peut également préciser si on doit attendre avant de continuer l'exécution
+    ## Joue un son à partir de son chemin d'accès.
+    # @param path Le chemin d'accés du fichier audio.
     def playSound(self, path):
         #On charge le son, on le joue, puis on attend qu'il soit fini
         sound = mixer.Sound(path)

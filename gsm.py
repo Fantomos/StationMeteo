@@ -2,16 +2,27 @@ import serial
 import RPi.GPIO as GPIO
 from time import sleep, mktime
 
-
+## Classe Gsm.
+# Cette classe permet la communication et la gestion du module GSM SIM800L via UART.
 class Gsm:
+    ## Constructeur.
+    # @param gsm_power_gpio Numéro de pin pour allumer/éteindre le module GSM.
+    # @param config Objet ConfigFile.
+    # @param logger Logger principal.
+    # @param mesures_nbtry Nombres d'essais maximum de l'initialisation des capteurs. La valeur par défaut est 5.
+    # @param baudrate Baudrate du bus UART. La valeur par défaut est 115200.
+    # @param timeout Timeout du bus UART. La valeur par défaut est 1.
     def __init__(self, gsm_power_gpio , config, logger, mesures_nbtry = 5, baudrate = 115200, timeout = 1):
+        ##  Numéro de pin pour allumer/éteindre le module GSM.
         self.power_gpio = gsm_power_gpio
-        self.command = ["batterie", "site", "nom", "debut", "début", "fin", "altitude", "logs", "data", "maitre", "maître"]
+        ## Logger principal
         self.logger = logger
+        ## Objet ConfigFile.
         self.config = config
         self.logger.info("Tentative d'ouverture du port série pour le module GSM...")
         for i in range(mesures_nbtry):
             try:
+                ## Référence du bus UART.
                 self.bus = serial.Serial("/dev/ttyAMA0", baudrate, timeout = timeout)
             except:
                 logger.error("Impossible d'ouvrir le port série pour le module GSM.")
@@ -20,8 +31,11 @@ class Gsm:
                 logger.success("Bus série avec le GSM ouvert")
                 break
         
+    ## Liste des commandes possible par SMS.
+    command = ["batterie", "site", "nom", "debut", "début", "fin", "altitude", "logs", "data", "maitre", "maître"]
 
-    #Vide le buffer
+    ## Lit les données sur le bus série.
+    # @return Retourne les données.
     def readBuffer(self):
         try:
             buffer = self.bus.read(1000).decode("8859")
@@ -35,7 +49,8 @@ class Gsm:
             self.logger.error("Erreur lors de la lecture du buffer.")
             return ""
 
-    #Envoie une commande AT sans avoir besoin d'écrire "AT" ou \r\n
+    ## Envoie une commande AT sans avoir besoin d'écrire "AT" .
+    # @return Retourne la réponse à la commande.
     def sendAT(self, command):
         try:
             self.readBuffer()  #On vide le buffer avant
@@ -46,7 +61,7 @@ class Gsm:
             self.logger.error("Erreur lors de l'envoi de la commande " + str(command) + ".")
             return "error"
             
-    #On envoie une impulsion de 2 sec sur la pin POWER du module GSM
+    ## Envoie une impulsion de 2 sec sur le pin POWER du module GSM pour l'éteindre/allumer.
     def power(self):
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(self.power_gpio, GPIO.OUT)
@@ -56,7 +71,8 @@ class Gsm:
         sleep(1)
         GPIO.setup(self.power_gpio, GPIO.IN)
 
-    #Allume le module GSM (power + commande vide) et renvoie le résultat d'une commande simple
+    ## Allume le module GSM (power + commande vide) et renvoie le résultat d'une commande vide.
+    # @return Retourne OK ou not OK si le module ne réponds pas.
     def turnOn(self):
         if self.sendAT("") != "OK":
             self.power()
@@ -64,24 +80,28 @@ class Gsm:
         else:
             return "not OK"
 
-    #Eteint la station
+    ## Eteint la station
     def turnOff(self):
         if self.sendAT("") == "OK":
             self.power()
-        return "OK"
 
-    #Entre le code PIN de la carte SIM
+    ## Entre le code PIN de la carte SIM
+    # @return Retourne la réponse à la commande.
     def enterPIN(self):
         return self.sendAT("+CPIN=\"0000\"")
 
-    #Envoie les commandes nécessaires pour envoyer des SMS
+    ## Initialise le module pour envoyer des SMS
+    # @return Retourne la réponse aux commandes.
     def setupSMS(self):
         output = self.sendAT("+CMGF=1") #Met en mode texte
         output += self.sendAT("+CSCS=\"GSM\"") #Indique un encodage GSM
         self.sendAT("+CPMS=\"SM\"") #Indique que le stockage se fait dans la carte SIM
         return output
 
-    #Envoie un seul SMS au numéro indiqué
+    ## Envoie un seul SMS au numéro indiqué.
+    # @param numero Le numéro de téléphone auquel envoyer un SMS.
+    # @param txt Le message à envoyer.
+    # @return Retourne la réponse aux commandes.
     def sendSingleSMS(self, numero, txt):
         output = self.sendAT("+CMGS=\"" + numero + "\"") #On envoie le numéro
         output += self.sendAT(txt[:159]) #On envoie le texte du SMS
@@ -90,7 +110,10 @@ class Gsm:
         self.readBuffer() #On vide le buffer
         return output
 
-    #Envoie autant de SMS que nécessaire au numéro indiqué pour envoyer le texte indiqué
+    ## Envoie autant de SMS que nécessaire au numéro indiqué pour envoyer le texte indiqué.
+    # @param numero Le numéro de téléphone auquel envoyer un SMS.
+    # @param txt Le message à envoyer.
+    # @return Retourne la réponse aux commandes.
     def sendSMS(self, numero, txt):
         output = []
         sms_list = [txt[150*i:150*(i+1)] for i in range(1+len(txt) // 150)] #On découpe le texte en morceau d'au plus 150 caractères de long
@@ -101,7 +124,8 @@ class Gsm:
         self.readBuffer()
         return ",".join(output)
 
-    #Renvoie la date sous la forme d'un tableau [année, mois, jour, heure, minute, seconde]
+    ## Renvoie la date sous la forme d'un tableau [année, mois, jour, heure, minute, seconde].
+    # @return Retourne le timestamp UNIX représentant le temps actuel ou 0 en cas d'erreur lors de l'accés au module.
     def getDateTime(self):
         self.logger.info("Tentative d'actualiser l'heure depuis le module GSM...")
         buffer = self.sendAT("+CCLK?") #On récupère la date et heure du module GSM
@@ -115,8 +139,8 @@ class Gsm:
             self.logger.error("Impossible d'obtenir la date et heure depuis le module GSM")
             return 0
         
-    #Renvoie le nombre de SMS dans la mémoire de la carte
-    #on reçoit une réponse sous la forme "+CPMS: x,y,x,y,x,y", où x est le nombre de message stocké et y la capacité
+    ## Renvoie le nombre de SMS dans la mémoire de la carte. On reçoit une réponse sous la forme "+CPMS: x,y,x,y,x,y", où x est le nombre de message stocké et y la capacité.
+    # @return Retourne le nombre de SMS ou -1 en cas d'erreur.
     def getSMSCount(self):
         buffer = self.sendAT("+CPMS=\"SM\"")
         try:
@@ -124,7 +148,8 @@ class Gsm:
         except:
             return -1
         
-    #Renvoie les index des SMS enregistrés (nombre entre 1 et 50]
+    ## Renvoie les indices des SMS enregistrés (nombre entre 1 et 50]
+    # @return Retourne la listes des indices des SMS enregistrés.
     def getSMSIndexes(self):
         buffer = self.sendAT("+CMGL=\"ALL\"").split("\r\n")
         indexes = []
@@ -138,7 +163,9 @@ class Gsm:
                     self.logger.error("Erreur dans la récupération des index")
         return indexes
 
-    #Lit un SMS à partir de l'indice donné et renvoie le texte du message et le numéro de l'expéditeur
+    ## Lit un SMS à partir de l'indice donné et renvoie le texte du message et le numéro de l'expéditeur.
+    # @param index L'indice du SMS à lire.
+    # @return Retourne le message et le numéro de téléphone de l'expéditeur ou un tableau vide en cas d'erreur lors de la lecture.
     def readSMS(self, index):
         self.readBuffer()
         buffer = self.sendAT("+CMGR=" + str(index)) #On demande le SMS
@@ -152,21 +179,23 @@ class Gsm:
             self.logger.error("Erreur lors de la lecture du SMS d'indice " + str(index))
             return []
 
-    #Supprime un SMS à partir de son indice
+    ## Supprime un SMS à partir de son indice.
+    # @param index L'indice du SMS à supprimer.
+    # @return Retourne la réponse à la commande.
     def deleteSMS(self, index):
         sleep(0.1)
         return self.sendAT("+CMGD=" + str(index) + ",0")
 
+    ## Supprime tous les SMS.
+    # @return Retourne la réponse à la commande.
     def deleteAllSMS(self):
         sleep(0.1)
         self.readBuffer()
         return self.sendAT("+CMGD=0,4")
 
-    #Renvoie le status d'un sms.
-    #0 = SMS normal (dans tous les cas sauf ceux ci-dessous)
-    #1 = commande pour modifier un paramètre (si le texte contient "=" et une commande valide)
-    #2 = commande pour lire un paramètre (si le texte contient "?" et une commande valide)
-    #3 = mot de passe reçu (si le texte contient le mot de passe)
+    ## Renvoie le status d'un SMS.
+    # @param sms Le SMS dont l'on souhaite obtenir le status.
+    # @return Retourne le status du SMS. -1 = SMS vide. 0 = SMS normal (dans tous les cas sauf ceux ci-dessous). 1 = commande pour modifier un paramètre (si le texte contient "=" et une commande valide). 2 = commande pour lire un paramètre (si le texte contient "?" et une commande valide). 3 = mot de passe reçu (si le texte contient le mot de passe). 
     def getStatus(self ,sms):
         if len(sms) > 1:
             sms = sms[0]
@@ -181,7 +210,10 @@ class Gsm:
         else:
             return -1
 
-    #Exécute une commande de lecture de paramètre à partir du texte du sms et renvoie la réponse
+    ## Exécute une commande de lecture de paramètre à partir du texte du sms.
+    # @param command La commande à exécuter.
+    # @param sensorsData Le rapport météo sous la forme d'un dictionnaire.
+    # @return Retourne la réponse à la commande.
     def executeGetCommand(self, command, sensorsData):
         #On récupère ce qui est avant le ?, on le met en minuscule et on enlève les espaces avant et après
         word = command.split("?")[0].lower().strip()
@@ -206,7 +238,9 @@ class Gsm:
         
         return "Commande inconnue."
 
-    #Exécute une commande de modification de paramètres à partir d'un sms, et renvoie la réponse
+    ## Exécute une commande de modification de paramètres à partir d'un sms, et renvoie la réponse.
+    # @param command La commande à exécuter.
+    # @return Retourne la réponse à la commande.
     def executeSetCommand(self, command):
         #On récupère ce qui est de part et d'autres du =, on met le premier en minuscule et on enlève les espaces avant et après
         word = command.split("=")[0].lower().strip()
@@ -239,7 +273,8 @@ class Gsm:
         
         return "Commande inconnue."
 
-    #Répond à tous les SMS reçus
+    ## Répond à tous les SMS reçus.
+    # @param sensorsData Le rapport météo sous la forme d'un dictionnaire.
     def respondToSMS(self, sensorsData):
         self.logger.info("Analyse des SMS reçus...")
         if self.getSMSCount() > 0: #Si on a reçu des SMS
@@ -280,8 +315,9 @@ class Gsm:
 
 
 
-    #Crée le String à envoyer par SMS pour transmettre les informations
-        #Pour chaque valeur, on écrit "n/a" si la valeur n'a pas été trouvée
+    ## Crée le message à envoyer par SMS pour transmettre les informations. Pour chaque valeur, on écrit "n/a" si la valeur n'a pas été trouvée.
+    # @param sensorsData Le rapport météo sous la forme d'un dictionnaire.
+    # @return Retourne le message.
     def createSMS(self, sensorsData):
         temperature = str(round(sensorsData['Temperature'], 1)) if float(sensorsData['Temperature']) != 0 else "n/a"
         vitesse_moy = str(int(sensorsData['Speed']))
@@ -306,6 +342,9 @@ class Gsm:
             output = output[:158]
         return output
 
+## Convertis le message en ASCII.
+# @param body Le message à convertir.
+# @return Retourne le code ASCII ou le message en cas d'erreur.
 def convertToAscii(body):
         try:
             letters = body[::4]

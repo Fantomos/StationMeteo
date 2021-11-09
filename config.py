@@ -11,9 +11,13 @@ class ConfigFile:
     ## Constructeur. Prends en paramètre le nom du fichier de configuration.
     # @param filename Le nom du fichier de configuration.
     def __init__(self, filename):
+        ## Objet ConfigParser.
         self.config = ConfigParser()
+        ## Le nom du fichier de configuration.
         self.filename = filename
+        ## Dictionnaire des paramètres du fichier de configuration.
         self.config.read(filename)
+        ## Sous-dictionnaire des paramètres du fichier de configuration.
         self.subconfig = self.config['DEFAULT']
         
 
@@ -63,34 +67,42 @@ class ConfigFile:
         self.subconfig['altitude'] = altitude
 
     ## Recupère le code PIN de la carte SIM.
+    # @return Retourne le PIN du GSM.
     def getGsmPin(self):
         return self.subconfig['gsm_pin']
 
     ## Recupère la tension de la batterie limite.
+    # @return Retourne la tension limite de la batterie.
     def getBatteryLimit(self):
         return self.subconfig.getfloat('seuil_alerte',11.5)
 
     ## Recupère le mot de passe maître de la station.
+    # @return Retourne le mot de passe maître de la station.
     def getGsmPswd(self):
         return self.subconfig.get('gsm_password','Kews')
 
     ## Recupère le numéro de téléphone maître de la station.
+    # @return Retourne le numéro de téléphone maître de la station.
     def getGsmMaster(self):
         return self.subconfig.get('gsm_master','+33780041476')
 
     ## Recupère l'heure de réveil de la station.
+    # @return Retourne l'heure de réveil de la station.
     def getWakeupHour(self):
         return self.subconfig.getint('wakeup', 10)
 
     ## Recupère l'heure d'extinction de la station.
+    # @return Retourne l'heure d'extinction de la station.
     def getSleepHour(self):
         return self.subconfig.getint('sleep', 18)
 
     ## Recupère le nom de la station.
+    # @return Retourne le nom de la station.
     def getSiteName(self):
         return self.subconfig.get("nom", 'Position inconnue')
 
     ## Recupère l'altitude de la station.
+    # @return Retourne l'altitude de la station.
     def getSiteAltitude(self):
         return self.subconfig.getint("altitude", 0)
 

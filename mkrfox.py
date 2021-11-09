@@ -1,12 +1,23 @@
 from time import sleep
 
+## Classe Mkrfox. 
+#  Cette classe permet la communication avec le microcontrolleur Arduino MKRFOX 1200.
 class Mkrfox:
+
+    ## Constructeur.
+    # @param i2c_bus Objet I2C initialisé.
+    # @param logger Logger principal.
+    # @param i2c_address Adresse I2C du MKRFOX 12000.
     def __init__(self, i2c_bus, logger, i2c_address):
+        ## Objet I2C initialisé.
         self.i2c_bus = i2c_bus
+        ## Adresse I2C du MKRFOX 12000.
         self.i2c_address = i2c_address
+        ## Logger principal.
         self.logger = logger
 
     
+    ## Liste des nom des registres et de leurs adresses.
     register =	{
             "sleep" : 0xD8,
             "eveil" : 0xD0,
@@ -16,15 +27,23 @@ class Mkrfox:
     }
    
 
-    #Fonction permettant de lire la valeur d'un registre du PIC. Renvoie 100000 en cas d'erreur.
+    ## Opération de lecture d'un registre du MKRFOX.
+    # @param regName Nom du registre à lire.
+    # @param length Le nombre d'octet à lire.
+    # @return Retourne la valeur du registre.
     def read(self, regName, length):
         return self.i2c_bus.readReg(self.i2c_address, register[regName], length)
     
-    #Ecrit une valeur donnée (data) dans un registre donné (reg)
+    ## Opération d'écriture d'un registre du MKRFOX.
+    # @param regName Nom du registre à écrire.
+    # @param data Les données à écrire.
+    # @param length Le nombre d'octet à écrire.
     def write(self, regName, data, length):
         self.i2c_bus.writeReg(self.i2c_address, register[regName], data, length)
 
-    #Permet d'envoyer le tableau passé en argument à Sigfox
+    ## Formate les données des capteurs sous forme d'un tableau d'octet.
+    # @param sensorsData Les données des capteurs.
+    # @return Retourne un tableau d'octet.
     def formatData(self, sensorsData):
         try:
             data = []
@@ -66,7 +85,9 @@ class Mkrfox:
         except:
             self.logger.error("Erreur lors du traitement des données pour l'envoi au réseau Sigfox.")
             
-    #Fonction qui permet d'envoyer les données météo et de les mettre en forme
+        
+    ## Transmet les données des capteurs au MKRFOX.
+    # @param sensorsData Les données des capteurs.
     def sendData(self, sensorsData):
         data = self.formatData(sensorsData)
         try:
