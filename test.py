@@ -39,10 +39,6 @@ logger_battery = logger.bind(type="BATTERY")
 
 
 i2c_bus = I2C(logger = logger_log, mesures_nbtry = MESURES_TRY)
-mkrfox = Mkrfox(i2c_bus = i2c_bus, logger = logger_log,  i2c_address = MKRFOX_ADDR)
 
-
-epochtime = 1635505843
-mkrfox.write("time", epochtime, 4) 
-sleep(1)
-print(mkrfox.read("time", 4))
+res = i2c_bus.readReg(0x55,0x04,1)
+print(res)
