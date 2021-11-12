@@ -1,18 +1,17 @@
-from time import sleep
+from i2c import I2C
 
 ## Classe Mkrfox. 
 #  Cette classe permet la communication avec le microcontrolleur Arduino MKRFOX 1200.
 class Mkrfox:
 
     ## Constructeur.
-    # @param i2c_bus Objet I2C initialisé.
+    # @param pi Instance de pigpio.
     # @param logger Logger principal.
-    # @param i2c_address Adresse I2C du MKRFOX 12000.
-    def __init__(self, i2c_bus, logger, i2c_address):
-        ## Objet I2C initialisé.
-        self.i2c_bus = i2c_bus
-        ## Adresse I2C du MKRFOX 12000.
-        self.i2c_address = i2c_address
+    # @param i2c_address Adresse I2C du MKRFOX 1200.
+    # @param nb_try Nombres d'essais maximum de l'initialisation du bus I2C. La valeur par défaut est 5.
+    def __init__(self, pi, i2c_address, logger, nb_try):
+         ## Objet I2C initialisé.
+        self.i2c_bus = I2C(pi, i2c_address, logger, nb_try)
         ## Logger principal.
         self.logger = logger
 
@@ -32,14 +31,14 @@ class Mkrfox:
     # @param length Le nombre d'octet à lire.
     # @return Retourne la valeur du registre.
     def read(self, regName, length):
-        return self.i2c_bus.readReg(self.i2c_address, register[regName], length)
+        return self.i2c_bus.readReg(self.i2c_address, self.register[regName], length)
     
     ## Opération d'écriture d'un registre du MKRFOX.
     # @param regName Nom du registre à écrire.
     # @param data Les données à écrire.
     # @param length Le nombre d'octet à écrire.
     def write(self, regName, data, length):
-        self.i2c_bus.writeReg(self.i2c_address, register[regName], data, length)
+        self.i2c_bus.writeReg(self.i2c_address, self.register[regName], data, length)
 
     ## Formate les données des capteurs sous forme d'un tableau d'octet.
     # @param sensorsData Les données des capteurs.

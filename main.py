@@ -4,13 +4,13 @@ from attiny import Attiny
 from config import ConfigFile
 from gsm import Gsm
 from mkrfox import Mkrfox
-from i2c import I2C
 from loguru import logger
 from sensors import Sensors
 from radio import Radio
 from attiny import Attiny
 import RPi.GPIO as GPIO
 from os import system
+import pigpio
 
 MESURES_TRY = 5
 NB_MESURES = 3
@@ -44,13 +44,15 @@ logger_log.info("###############################################################
 # Initialisation du fichier de configuration
 config = ConfigFile(filename = CONFIG_FILENAME)
 
+# Initialise l'instancie pigpio
+pi = pigpio.pi()
+
 #Initialisation du bus I2C, PIC, Sensors, GSM, Sigfox et radio
-i2c_bus = I2C(logger = logger_log, mesures_nbtry = MESURES_TRY)
-mkrfox = Mkrfox(i2c_bus = i2c_bus, logger = logger_log,  i2c_address = MKRFOX_ADDR)
+mkrfox = Mkrfox(pi = pi, i2c_address = MKRFOX_ADDR, logger = logger_log, nb_try=MESURES_TRY)
+attiny = Attiny(pi = pi, i2c_address = ATTINY_ADDR, logger = logger_log, nb_try=MESURES_TRY)
 gsm = Gsm(gsm_power_gpio=GPIO_GSM_POWER, config = config, logger = logger_log, mesures_nbtry=MESURES_TRY)
 sensors = Sensors(dht11_gpio = GPIO_DHT11, config = config, logger = logger_log, logger_data=logger_data, mesures_nbtry=MESURES_TRY, nbmesures=NB_MESURES)
 radio = Radio(config = config, logger = logger_log,  speed = TTS_SPEED, pitch = TTS_PITCH, tw_gpio = GPIO_TW, ptt_gpio = GPIO_PTT)
-attiny = Attiny(i2c_bus=i2c_bus, logger=logger_log,i2c_address=ATTINY_ADDR)
 
 # Initialisation GPIO
 GPIO.setmode(GPIO.BOARD)
