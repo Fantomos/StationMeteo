@@ -16,13 +16,16 @@ class Mkrfox:
         self.logger = logger
 
     
-    ## Liste des nom des registres et de leurs adresses.
+    ## Liste des nom des registres associés à leurs adresses et nombres d'octects.
     register =	{
-            "sleep" : 0xD8,
-            "eveil" : 0xD0,
-            "time" : 0x00,
-            "state" : 0x45,
-            "sensorsData" : 0x46
+            "time" : (0x00,4),
+            "state" : (0x01,4),
+            "error" : (0x02,4),
+            "sleep" : (0x03,1),
+            "wakeup" : (0x04,1),
+            "sensorsData" : (0x05,12),
+            "battery" : (0x06,4),
+            "battery_threshold" :(0x07,4)
     }
    
 
@@ -30,15 +33,15 @@ class Mkrfox:
     # @param regName Nom du registre à lire.
     # @param length Le nombre d'octet à lire.
     # @return Retourne la valeur du registre.
-    def read(self, regName, length):
-        return self.i2c_bus.readReg(self.i2c_address, self.register[regName], length)
+    def read(self, regName):
+        return self.i2c_bus.readReg(self.register[regName][0], self.register[regName][1])
     
     ## Opération d'écriture d'un registre du MKRFOX.
     # @param regName Nom du registre à écrire.
     # @param data Les données à écrire.
     # @param length Le nombre d'octet à écrire.
-    def write(self, regName, data, length):
-        self.i2c_bus.writeReg(self.i2c_address, self.register[regName], data, length)
+    def write(self, regName, data):
+        self.i2c_bus.writeReg(self.register[regName][0], data, self.register[regName][1])
 
     ## Formate les données des capteurs sous forme d'un tableau d'octet.
     # @param sensorsData Les données des capteurs.
@@ -90,7 +93,7 @@ class Mkrfox:
     def sendData(self, sensorsData):
         data = self.formatData(sensorsData)
         try:
-            self.write("sensorsData", data, 12)
+            self.write("sensorsData", data)
         except:
             self.logger.error("Impossible d'envoyer des données au réseau Sigfox")
         else:

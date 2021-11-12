@@ -15,10 +15,9 @@ import pigpio
 MESURES_TRY = 5
 NB_MESURES = 3
 CONFIG_FILENAME = "config.ini"
-MKRFOX_ADDR = 0x33
+MKRFOX_ADDR = 0x55
 ATTINY_ADDR = 0x44
-SIGFOX_ADDR = 0x55
-SIGFOX_MESS_LENGTH = 12
+
 
 TTS_SPEED = 120
 TTS_PITCH = 30
@@ -30,9 +29,9 @@ GPIO_PTT = 31
 
 
 # Configuration des loggers (log, data et batterie)
-logger.add("logs/logs.txt", rotation="1 days", level="INFO", format="{time:HH:mm:ss} {message}", filter=lambda record: record["extra"]["type"] == "LOG")
-logger.add("logs/data.txt", rotation="1 days", level="INFO", format="{time:HH:mm:ss} {message}", filter=lambda record: record["extra"]["type"] == "DATA")
-logger.add("logs/battery.txt", rotation="1 days", level="INFO", format="{time:HH:mm:ss} {message}", filter=lambda record: record["extra"]["type"] == "BATTERY")
+logger.add("logs/logs.txt", rotation="1 days", retention=7, level="INFO", format="{time:HH:mm:ss} {message}", filter=lambda record: record["extra"]["type"] == "LOG")
+logger.add("logs/data.txt", rotation="1 days", retention=7, level="INFO", format="{time:HH:mm:ss} {message}", filter=lambda record: record["extra"]["type"] == "DATA")
+logger.add("logs/battery.txt", rotation="1 days", retention=7, level="INFO", format="{time:HH:mm:ss} {message}", filter=lambda record: record["extra"]["type"] == "BATTERY")
 logger_log = logger.bind(type="LOG")
 logger_data = logger.bind(type="DATA")
 logger_battery = logger.bind(type="BATTERY")
@@ -46,6 +45,17 @@ config = ConfigFile(filename = CONFIG_FILENAME)
 
 # Initialise l'instancie pigpio
 pi = pigpio.pi()
+if not pi.connected: # On vérifie que le deamon pigpiod est bien en cours d'exécution sinon on le démarre
+    logger_log.info("Lancement du deamon pigpiod")
+    system("sudo pigpiod") 
+    pi = pigpio.pi()
+    if not pi.connected: # On vérifie si cette fois-ci le deamon fonctionne sinon on arrête le programme
+        logger_log.error("Impossible d'initialiser pigpio.")
+        exit()
+    else:
+        logger_log.success("Pigpio initialisé")
+else:
+    logger_log.success("Pigpio initialisé")
 
 #Initialisation du bus I2C, PIC, Sensors, GSM, Sigfox et radio
 mkrfox = Mkrfox(pi = pi, i2c_address = MKRFOX_ADDR, logger = logger_log, nb_try=MESURES_TRY)
@@ -57,17 +67,17 @@ radio = Radio(config = config, logger = logger_log,  speed = TTS_SPEED, pitch = 
 # Initialisation GPIO
 GPIO.setmode(GPIO.BOARD)
 
-# On récupère date et heure du GSM si possible, sinon on recupère sur le PIC
+# On récupère date et heure du GSM si possible, sinon on recupère sur le MKRFOX
 epochTime = gsm.getDateTime() 
 if epochTime != 0:
-    mkrfox.write("time", epochTime, 4)
+    mkrfox.write("time", epochTime)
     system("sudo date -s '@" + int(epochTime) + "'")
 else:
     logger_log.info("Tentative d'actualiser l'heure depuis le module SigFox...")
-    mkrfox.write("time", 0, 1)
-    sleep(1)
-    epochTime = mkrfox.read("time", 4)
-    if epochTime != 0:
+    mkrfox.write("time", 0) # On envoie 0 au registre time du MKRFOX pour lui signaler de recupérer l'heure par le module Sigfox 
+    sleep(1) # On attends que l'heure soit actualisé sur le MKRFOX
+    epochTime = mkrfox.read("time") # On reçois l'heure du MKRFOX
+    if epochTime != 0: # Si l'heure est différente de 0 on met à jour l'heure système du Raspberry, sinon erreur
         system("sudo date -s '@" + str(epochTime) + "'")
         logger_log.success("Date et heure actualisées depuis le module SigFox")
     else:
@@ -88,7 +98,7 @@ logger_data.info(",".join([str(d) for d in sensorsData.items()]))
 # Récupère la tension de la batterie et l'enregistre dans un log
 logger_log.info("Lecture de la tension de la batterie...")
 try:
-    battery = mkrfox.read("battery", 4)/10
+    battery = mkrfox.read("battery")/10
 except:
     logger_log.error("Impossible de lire la tension de la batterie")
     battery = 0
@@ -100,7 +110,7 @@ logger_battery.info(sensorsData['Battery'])
 # Joue le message audio sur la radio
 radio.playVoiceMessage(sensorsData)
 
-# Envoie les données via Sigfox
+# Envoie les données au MKRFOX pour transmision via SigFox
 mkrfox.sendData(sensorsData)
 
 # Envoie les données via SMS
@@ -111,10 +121,14 @@ gsm.turnOff()
         
 #On nettoie les entrées/sorties
 GPIO.cleanup()
+pi.stop()
 
 # On signale au mkrfox que le cycle est terminé
-mkrfox.write("state", 2, 4) 
-logger_log.info("Cycle terminé ! Extinction du raspberry immédiate")
+mkrfox.write("state", 2) 
+logger_log.info("Extinction du raspberry immédiate")
+logger_log.info("#################################################################")
+logger_log.info("########################### FIN CYCLE ###########################")
+logger_log.info("#################################################################")
 logger_log.info("\n\n")
 
 
