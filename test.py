@@ -24,8 +24,8 @@ TTS_PITCH = 30
 
 GPIO_GSM_POWER = 1
 GPIO_DHT11 = 23
-GPIO_TW = 29
-GPIO_PTT = 31
+GPIO_TW = 5
+GPIO_PTT = 6
 
 
 # Configuration des loggers (log, data et batterie)
@@ -62,7 +62,7 @@ mkrfox = Mkrfox(pi = pi, i2c_address = MKRFOX_ADDR, logger = logger_log, nb_try=
 attiny = Attiny(pi = pi, i2c_address = ATTINY_ADDR, logger = logger_log, nb_try=MESURES_TRY)
 # gsm = Gsm(gsm_power_gpio=GPIO_GSM_POWER, config = config, logger = logger_log, mesures_nbtry=MESURES_TRY)
 sensors = Sensors(dht11_gpio = GPIO_DHT11, config = config, logger = logger_log, logger_data=logger_data, mesures_nbtry=MESURES_TRY, nbmesures=NB_MESURES)
-radio = Radio(config = config, logger = logger_log,  speed = TTS_SPEED, pitch = TTS_PITCH, tw_gpio = GPIO_TW, ptt_gpio = GPIO_PTT)
+radio = Radio(config = config, logger = logger_log, pi = pi, speed = TTS_SPEED, pitch = TTS_PITCH, tw_gpio = GPIO_TW, ptt_gpio = GPIO_PTT)
 
 # Initialisation GPIO
 GPIO.setmode(GPIO.BOARD)

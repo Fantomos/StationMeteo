@@ -4,7 +4,7 @@ from time import sleep
 from os import environ
 environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 from pygame import mixer
-import RPi.GPIO as GPIO
+import pigpio
 
 ## Classe Radio. 
 #  Cette classe permet la communication du rapport météo par la radio. Elle utilise une synthèse vocale sous le nom de Voxpopuli. La fonction mixer de PyGame est utilisé pour lire les fichiers audios générés.
@@ -13,26 +13,29 @@ class Radio:
     ## Constructeur.
     # @param config Objet ConfigFile.
     # @param logger Logger principal.
+    # @param pi Instance de pigpio.
     # @param speed Vitesse de la lecture du message par la synthèse vocale. La valeur par défaut est 100.
     # @param pitch Pitch de la lecture du message par la synthèse vocale. La valeur par défaut est 40.
     # @param tw_gpio Numéro de pin pour alimenter le talkie-walkie. La valeur par défaut est 29.
     # @param ptt_gpio Numéro de pin pour le push-to-talk du talkie-walkie. La valeur par défaut est 31.
-    def __init__(self, config, logger, speed = 100, pitch = 40, tw_gpio = 29, ptt_gpio = 31):
+    def __init__(self, config, logger, pi,speed = 100, pitch = 40, tw_gpio = 29, ptt_gpio = 31):
         ##  Objet ConfigFile.
         self.config = config
         ##  Logger principal.
         self.logger = logger
+        ## Instance pigpio
+        self.pi = pi
         ## Numéro de pin pour alimenter le talkie-walkie.
         self.tw_gpio = tw_gpio
         ## Numéro de pin pour le push-to-talk du talkie-walkie.
         self.ptt_gpio = ptt_gpio
 
         # Configure les pins en sortie
-        GPIO.setmode(GPIO.BOARD)
-        GPIO.setup(self.tw_gpio, GPIO.OUT)
-        GPIO.setup(self.ptt_gpio, GPIO.OUT)
-        GPIO.output(self.tw_gpio, GPIO.LOW)
-        GPIO.output(self.ptt_gpio, GPIO.LOW)
+        self.pi.set_mode(self.tw_gpio, pigpio.OUTPUT)
+        self.pi.set_mode(self.ptt_gpio, pigpio.OUTPUT)
+        self.pi.write(self.tw_gpio,0)
+        self.pi.write(self.ptt_gpio,0)
+
         try:
             ## Référence de l'objet Voice de la synthèse vocale
             self.voice = Voice(lang="fr", voice_id=1, speed=speed, pitch=pitch)
@@ -67,9 +70,9 @@ class Radio:
             with open("radio.wav", "wb") as wavfile:
                 wavfile.write(wav)
             #On allume la radio, puis le PTT
-            GPIO.output(self.tw_gpio, GPIO.HIGH)
-            sleep(2)
-            GPIO.output(self.ptt_gpio, GPIO.HIGH)
+            self.pi.write(self.tw_gpio,1)
+            sleep(1)
+            self.pi.write(self.ptt_gpio,1)
             sleep(1)
             #On joue un bip d'introduction
             self.playSound("bip.wav")
@@ -78,9 +81,9 @@ class Radio:
             self.playSound("radio.wav")
             #On éteint le PTT et la radio
             sleep(1)
-            GPIO.output(self.ptt_gpio, GPIO.LOW)
+            self.pi.write(self.ptt_gpio,0)
             sleep(1)
-            GPIO.output(self.tw_gpio, GPIO.LOW)
+            self.pi.write(self.tw_gpio,0)
             mixer.quit()
             self.logger.success("Lecture terminée")
         else:

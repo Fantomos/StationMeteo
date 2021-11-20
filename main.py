@@ -24,8 +24,8 @@ TTS_PITCH = 30
 
 GPIO_GSM_POWER = 1
 GPIO_DHT11 = 23
-GPIO_TW = 29
-GPIO_PTT = 31
+GPIO_TW = 5
+GPIO_PTT = 6
 
 
 # Configuration des loggers (log, data et batterie)
@@ -103,7 +103,7 @@ except:
     logger_log.error("Impossible de lire la tension de la batterie")
     battery = 0
 else:
-    logger_log.success("Lecture terminée")
+    logger_log.success("Lecture de la batterie terminée")
 sensorsData["Battery"] = battery
 logger_battery.info(sensorsData['Battery'])
 

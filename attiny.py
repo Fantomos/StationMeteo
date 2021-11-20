@@ -27,4 +27,9 @@ class Attiny:
         return self.i2c_bus.readAll(length)
     
     def getWindData(self):
-        return {"Direction":0, "Speed":0, "DirectionMax":0, "SpeedMax":0}
+        wind_array = self.read(14)
+        direction = int.from_bytes(wind_array[:2], byteorder='big', signed=False)
+        speed = int.from_bytes(wind_array[2:4], byteorder='big', signed=False)
+        direction_max = int.from_bytes(wind_array[4:6], byteorder='big', signed=False)
+        speed_max = int.from_bytes(wind_array[6:8], byteorder='big', signed=False)
+        return {"Direction": direction, "Speed":speed, "Direction_max":direction_max, "Speed_max":speed_max}
