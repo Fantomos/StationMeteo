@@ -66,14 +66,14 @@ class Mkrfox:
             #Vitesse du vent
             #On envoie la vitesse du vent de l'intervalle [0 ; 255] en un octet
             data.append(round(sensorsData['Speed']))
-            data.append(round(sensorsData['SpeedMax']))
+            data.append(round(sensorsData['Speed_max']))
 
             #Direction du vent
             #On envoie la direction entre [0 ; 360] en deux octects
             direction = round(sensorsData['Direction'])
             data.append(direction // 256)
             data.append(direction % 256)
-            directionMax = round(sensorsData['DirectionMax'])
+            directionMax = round(sensorsData['Direction_max'])
             data.append(directionMax // 256)
             data.append(directionMax % 256)
 

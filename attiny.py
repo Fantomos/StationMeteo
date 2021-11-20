@@ -12,6 +12,13 @@ class Attiny:
         self.i2c_bus = I2C(pi, i2c_address, logger, nb_try)
         ## Logger principal.
         self.logger = logger
+    
+    ## Opération d'écriture d'un registre du MKRFOX.
+    # @param regName Nom du registre à écrire.
+    # @param data Les données à écrire.
+    # @param length Le nombre d'octet à écrire.
+    def askRead(self):
+        self.i2c_bus.writeReg(0x00, 0x11, 1)
 
     ## Opération de lecture de tous les registres de l'ATTINY.
     # @param length Le nombre d'octet à lire.

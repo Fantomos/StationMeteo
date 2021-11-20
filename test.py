@@ -12,8 +12,8 @@ import RPi.GPIO as GPIO
 from os import system
 import pigpio
 
-MESURES_TRY = 5
-NB_MESURES = 3
+MESURES_TRY = 1
+NB_MESURES = 1
 CONFIG_FILENAME = "config.ini"
 MKRFOX_ADDR = 0x55
 ATTINY_ADDR = 0x44
@@ -60,15 +60,37 @@ else:
 #Initialisation du bus I2C, PIC, Sensors, GSM, Sigfox et radio
 mkrfox = Mkrfox(pi = pi, i2c_address = MKRFOX_ADDR, logger = logger_log, nb_try=MESURES_TRY)
 attiny = Attiny(pi = pi, i2c_address = ATTINY_ADDR, logger = logger_log, nb_try=MESURES_TRY)
+# gsm = Gsm(gsm_power_gpio=GPIO_GSM_POWER, config = config, logger = logger_log, mesures_nbtry=MESURES_TRY)
+sensors = Sensors(dht11_gpio = GPIO_DHT11, config = config, logger = logger_log, logger_data=logger_data, mesures_nbtry=MESURES_TRY, nbmesures=NB_MESURES)
+radio = Radio(config = config, logger = logger_log,  speed = TTS_SPEED, pitch = TTS_PITCH, tw_gpio = GPIO_TW, ptt_gpio = GPIO_PTT)
 
+# Initialisation GPIO
+GPIO.setmode(GPIO.BOARD)
+
+
+
+
+
+# Recupère les données des capteurs connectées au Raspberry
+sensorsData = sensors.getRPISensorsData()
+#  print(sensorsData)
+sensorsData.update({"Direction":0, "Speed":0, "Direction_max":0, "Speed_max":0, "Battery":0})
+
+# Joue le message audio sur la radio
+radio.playVoiceMessage(sensorsData)
+
+mkrfox.sendData(sensorsData)
+# attiny.askRead()
+# sleep(2)
+# print(attiny.read(14))
 
 # On signale au mkrfox que le cycle est terminé
-mkrfox.write("wakeup", 45)
-print(mkrfox.read("wakeup"))
-        
+# mkrfox.write("wakeup", 45)
+# print(mkrfox.read("wakeup"))
+# print(mkrfox.read("battery"))     
 
 pi.stop()
-
+GPIO.cleanup()
 logger_log.info("#################################################################")
 logger_log.info("########################### FIN CYCLE ###########################")
 logger_log.info("#################################################################")

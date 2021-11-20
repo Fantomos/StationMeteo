@@ -31,6 +31,8 @@ class Radio:
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(self.tw_gpio, GPIO.OUT)
         GPIO.setup(self.ptt_gpio, GPIO.OUT)
+        GPIO.output(self.tw_gpio, GPIO.LOW)
+        GPIO.output(self.ptt_gpio, GPIO.LOW)
         try:
             ## Référence de l'objet Voice de la synthèse vocale
             self.voice = Voice(lang="fr", voice_id=1, speed=speed, pitch=pitch)
@@ -66,18 +68,18 @@ class Radio:
                 wavfile.write(wav)
             #On allume la radio, puis le PTT
             GPIO.output(self.tw_gpio, GPIO.HIGH)
-            sleep(0.5)
+            sleep(2)
             GPIO.output(self.ptt_gpio, GPIO.HIGH)
-            sleep(0.2)
+            sleep(1)
             #On joue un bip d'introduction
             self.playSound("bip.wav")
-            sleep(0.7)
+            sleep(1)
             #On joue le message
             self.playSound("radio.wav")
             #On éteint le PTT et la radio
-            sleep(0.5)
+            sleep(1)
             GPIO.output(self.ptt_gpio, GPIO.LOW)
-            sleep(0.1)
+            sleep(1)
             GPIO.output(self.tw_gpio, GPIO.LOW)
             mixer.quit()
             self.logger.success("Lecture terminée")

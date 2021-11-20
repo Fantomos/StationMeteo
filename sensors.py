@@ -31,7 +31,7 @@ class Sensors:
             try:
                 ## Référence du capteur d'humidité DHT11.
                 self.hygrometre = DHT.DHT11
-            except: #Si ça ne marche pas on attend avant de rententer
+            except : #Si ça ne marche pas on attend avant de rententer
                 self.hygrometre = None
                 self.logger.error("Impossible de se connecter à l'hygromètre, essai " + str(i+1) + "/" + str(mesures_nbtry) + ".")
                 time.sleep(1)
@@ -46,8 +46,9 @@ class Sensors:
             try:
                 ## Référence du capteur de température.
                 self.thermometre = W1ThermSensor() #On tente d'établir la connexion
-            except: #Si ça ne marche pas on attend avant de rententer
+            except Exception as e: #Si ça ne marche pas on attend avant de rententer
                 self.thermometre = None
+                self.logger.error(e)
                 self.logger.error("Impossible de se connecter au thermomètre, essai " + str(i+1) + "/" + str(mesures_nbtry) + ".")
                 time.sleep(1)
             else: #Si ça marche on sort de la boucle
@@ -58,9 +59,9 @@ class Sensors:
             try:
                 ## Référence du capteur de pression.
                 self.barometre = BMP085() #On tente d'établir la connexion
-                self.barometre.seaLevel(self.config.getSiteAltitude())
-            except: #Si ça ne marche pas on attend avant de rententer
+            except Exception as e: #Si ça ne marche pas on attend avant de rententer
                 self.barometre = None
+                self.logger.error(e)
                 self.logger.error("Impossible de se connecter au baromètre, essai " + str(i+1) + "/" + str(mesures_nbtry) + ".")
                 time.sleep(1)
             else: #Si ça marche on sort de la boucle
@@ -74,10 +75,13 @@ class Sensors:
     def readThermometer(self):
         try:
             return self.thermometre.get_temperature()
-        except:
+        except Exception as e:
+            self.logger.error(e)
+            self.logger.info("Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.")
             try:
                 return self.barometre.read_temperature()
-            except:
+            except Exception as e:
+                self.logger.error(e)
                 self.logger.error("Impossible de lire le thermomètre.")
                 return 0
 
@@ -86,7 +90,8 @@ class Sensors:
     def readHygrometer(self):
         try:
             return DHT.read_retry(self.hygrometre, self.dht11_gpio)
-        except:
+        except Exception as e:
+            self.logger.error(e)
             self.logger.error("Impossible de lire l'hygromètre.")
             return 0, 0
 
@@ -95,7 +100,8 @@ class Sensors:
     def readBarometer(self):
         try:
             return self.barometre.read_pressure()
-        except:
+        except Exception as e:
+            self.logger.error(e)
             self.logger.error("Impossible de lire le baromètre.")
             return 0
 
@@ -113,7 +119,8 @@ class Sensors:
             alpha = nuages_dewa * T/(nuages_dewb + T) + math.log(phi)
             dew_point = (nuages_dewb * alpha)/(nuages_dewa - alpha)
             return nuages_K * (T - dew_point)
-        except:
+        except Exception as e:
+            self.logger.error(e)
             self.logger.error("Impossible de calculer la hauteur de la base des nuages.")
             return 0
 
@@ -123,7 +130,7 @@ class Sensors:
     def getRPISensorsData(self):
         #Température, humidité, pression, altitude
         #Pour chaque grandeur, on l'ajoute au tableau seulement si elle n'est pas trop grande, ce qui indiquerait un problème de mesure
-        T, H, P = [], [], [], []
+        T, H, P = [], [], []
         for i in range(self.nbmesures):
             self.logger.info("Début des mesures : " + str(i+1) +"/"+ str(self.nbmesures))
             temp = self.readThermometer()

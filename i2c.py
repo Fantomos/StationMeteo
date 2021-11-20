@@ -32,15 +32,15 @@ class I2C:
     # @param length Le nombre d'octet à lire.
     # @return Retourne la valeur du registre ou 0 en cas d'erreur.
     def readReg(self, reg, length):
-        # try:
+        try:
             self.pi.i2c_write_device(self.handle, [reg])
             sleep(0.001)
             buffer = self.pi.i2c_read_device(self.handle, length)
             self.logger.success("Données " + str(buffer[1]) + " reçues sur le registre " + str(reg))
             return int.from_bytes(buffer[1], byteorder='big', signed=False) 
-        # except:
-        #     self.logger.error("Impossible de lire le registre " + str(reg))
-        #     return 0
+        except:
+             self.logger.error("Impossible de lire le registre " + str(reg))
+             return 0
 
     ## Opération de lecture de tous les registres sur le bus I2C.
     # @param length Le nombre d'octet à lire.
@@ -49,7 +49,7 @@ class I2C:
         try:
             buffer = self.pi.i2c_read_device(self.handle, length)
             self.logger.success("Données " + str(buffer[1]) + " reçues")
-            return int.from_bytes(buffer[1], byteorder='big', signed=False) 
+            return buffer
         except:
             self.logger.error("Impossible de lire les registres")
             return 0
