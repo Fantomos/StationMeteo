@@ -49,7 +49,7 @@ class I2C:
         try:
             buffer = self.pi.i2c_read_device(self.handle, length)
             self.logger.success("Données " + str(buffer[1]) + " reçues")
-            return buffer
+            return buffer[1]
         except:
             self.logger.error("Impossible de lire les registres")
             return 0
