@@ -79,7 +79,7 @@ if epochTime != 0:
 else:
     logger_log.info("Tentative d'actualiser l'heure depuis le module SigFox...")
     mkrfox.write("time", 0) # On envoie 0 au registre time du MKRFOX pour lui signaler de recupérer l'heure par le module Sigfox 
-    while(mkrfox.read("state") & 0x02 != 1) : # On attends que l'heure soit actualisé par le MKRFOX
+    while(mkrfox.read("state") & 0x02 != 1): # On attends que l'heure soit actualisé par le MKRFOX
         sleep(1)
     epochTime = mkrfox.read("time") # On reçois l'heure du MKRFOX
     if epochTime != 0: # Si l'heure est différente de 0 on met à jour l'heure système du Raspberry, sinon erreur
