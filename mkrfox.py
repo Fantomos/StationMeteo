@@ -19,8 +19,8 @@ class Mkrfox:
     ## Liste des nom des registres associés à leurs adresses et nombres d'octects.
     register =	{
             "time" : (0x00,4),
-            "state" : (0x01,4),
-            "error" : (0x02,4),
+            "state" : (0x01,1),
+            "error" : (0x02,1),
             "sleep" : (0x03,1),
             "wakeup" : (0x04,1),
             "sensorsData" : (0x05,12),
