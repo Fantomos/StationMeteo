@@ -146,7 +146,6 @@ class Sensors:
         
         #On renvoie un tableau contenant toutes les gradeurs moyennées
         rpiSensorsData = {"Time":time.strftime("%Hh%M"), "Temperature":average(T),"Humidity":average(H),"Pressure":average(P), "Cloud":self.getCloudBase(average(T), average(H))}
-
         return rpiSensorsData
 
    
