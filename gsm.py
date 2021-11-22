@@ -319,14 +319,14 @@ class Gsm:
     # @param sensorsData Le rapport météo sous la forme d'un dictionnaire.
     # @return Retourne le message.
     def createSMS(self, sensorsData):
-        temperature = str(round(sensorsData['Temperature'], 1)) if float(sensorsData['Temperature']) != 0 else "n/a"
-        vitesse_moy = str(int(sensorsData['Speed']))
-        vitesse_max = str(int(sensorsData['Speed_max']))
-        direction_moy = sensorsData['Direction']
-        direction_max = sensorsData['DIrection_max']
-        pression = str(int(sensorsData['Pressure'])) if int(sensorsData['Pressure']) != 0 else "n/a"
-        humidite = str(int(sensorsData['Humidity'])) if int(sensorsData['Humidity']) != 0 else "n/a"
-        hauteur_nuages = str(int(sensorsData['Cloud'])) if int(sensorsData['Cloud']) != 0 else "n/a"
+        temperature = str(round(sensorsData['Temperature'], 1)) if float(sensorsData['Temperature']) < 100 and float(sensorsData['Temperature']) > -50 else "n/a"
+        vitesse_moy = str(int(sensorsData['Speed'])) if float(sensorsData['Speed']) < 300 and float(sensorsData['Speed']) >= 0 else "erreur"
+        vitesse_max = str(int(sensorsData['Speed_max'])) if float(sensorsData['Speed_max']) < 300 and float(sensorsData['Speed_max']) >= 0 else "erreur"
+        direction_moy = str(sensorsData['Direction'])  if float(sensorsData['Direction']) < 360 and float(sensorsData['Direction']) >= 0 else "erreur"
+        direction_max = str(sensorsData['Direction_max']) if float(sensorsData['Direction_max']) < 360 and float(sensorsData['Direction_max']) >= 0 else "erreur"
+        pression = str(int(sensorsData['Pressure'])) if int(sensorsData['Pressure']) > 400 and int(sensorsData['Pressure']) < 1500 else "n/a"
+        humidite = str(int(sensorsData['Humidity'])) if int(sensorsData['Humidity']) <= 100 and int(sensorsData['Humidity']) >= 0 else "n/a"
+        hauteur_nuages = str(int(sensorsData['Cloud'])) if int(sensorsData['Cloud']) >= 0 else "n/a"
         
         output = "[" + str(sensorsData['Time']) + "]\n"
         output += "Temp: " + temperature + " C\n"

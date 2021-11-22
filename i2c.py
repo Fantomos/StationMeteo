@@ -60,7 +60,10 @@ class I2C:
     # @param length Le nombre d'octet à écrire.
     def writeReg(self, reg, data, length):
         try:
-            data_array = bytearray(data.to_bytes(length, 'big'))
+            if isinstance(data, list):
+                data_array = bytearray(data)
+            else:
+                data_array = bytearray(data.to_bytes(length, 'big'))
             data_array.insert(0, reg)
             self.pi.i2c_write_device(self.handle, data_array)
             self.logger.success("Données transmises sur le registre " + str(reg) + ", données=" + str(data) + ")")

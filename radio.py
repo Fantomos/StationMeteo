@@ -48,11 +48,11 @@ class Radio:
     # @param sensorsData Les données des capteurs.
     # @return Retourne le message sous la forme d'une chaîne de caractère.
     def createRadioMessage(self,sensorsData):
-        temperature = str(round(sensorsData['Temperature'], 1)).replace(".", ",").replace(",0", "") if float(sensorsData['Temperature']) < 100 else "erreur"
-        direction = str(round(sensorsData['Direction'],0)) if float(sensorsData['Direction']) < 1000 else "erreur"
-        direction_max = str(round(sensorsData['Direction_max'],0)) if float(sensorsData['Direction_max']) < 1000 else "erreur"
-        speed = str(round(sensorsData['Speed'], 0)).replace(".", ",").replace(",0", "") if float(sensorsData['Speed']) < 1000 else "erreur"
-        speed_max = str(round(sensorsData['Speed_max'], 0)).replace(".", ",").replace(",0", "") if float(sensorsData['Speed_max']) < 1000 else "erreur"
+        temperature = str(round(sensorsData['Temperature'], 1)).replace(".", ",").replace(",0", "") if float(sensorsData['Temperature']) < 100 and float(sensorsData['Temperature']) > -50 else "erreur"
+        direction = str(round(sensorsData['Direction'],0)) if float(sensorsData['Direction']) < 360 and float(sensorsData['Direction']) >= 0 else "erreur"
+        direction_max = str(round(sensorsData['Direction_max'],0)) if float(sensorsData['Direction_max']) < 360 and float(sensorsData['Direction_max']) >= 0 else "erreur"
+        speed = str(round(sensorsData['Speed'], 0)).replace(".", ",").replace(",0", "") if float(sensorsData['Speed']) < 300 and float(sensorsData['Speed']) >= 0 else "erreur"
+        speed_max = str(round(sensorsData['Speed_max'], 0)).replace(".", ",").replace(",0", "") if float(sensorsData['Speed_max']) < 300 and float(sensorsData['Speed']) >= 0 else "erreur"
         output = "Site de. " + self.config.getSiteName() + ". "
         output += "Vent moyen : " + speed + " " + " kilomètres par heure . . " + direction + " degrés . "
         output += "Vent maximal : " + speed_max + " " + " kilomètres par heure . . " + direction_max + " degrés . "

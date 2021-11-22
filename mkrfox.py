@@ -49,37 +49,42 @@ class Mkrfox:
     def formatData(self, sensorsData):
         try:
             data = []
-            #Température
-            #On passe la température de l'intervalle [-50; 205] à l'intervalle entier [0 ; 255] qu'on envoie en un octet
-            data.append(abs(round(sensorsData['Temperature'])))
-
-            #Humidité
-            #On envoie l'humidité directement car elle est comprise entre 0 et 100
-            data.append(round(sensorsData['Humidity']))
-
-            #Pression
-            #On envoie la pression de l'intervalle [800 ; 1453] en deux octects
-            pression = round(sensorsData['Pressure'])
-            data.append(pression // 256)
-            data.append(pression % 256)
-
+            temperature = round(sensorsData['Temperature']) if float(sensorsData['Temperature']) < 100 and float(sensorsData['Temperature']) > -50 else 0
+            vitesse_moy = round(sensorsData['Speed']) if float(sensorsData['Speed']) < 255 and float(sensorsData['Speed']) >= 0 else 0
+            vitesse_max = round(sensorsData['Speed_max']) if float(sensorsData['Speed_max']) < 255 and float(sensorsData['Speed_max']) >= 0 else 0
+            direction_moy = round(sensorsData['Direction'])  if float(sensorsData['Direction']) < 360 and float(sensorsData['Direction']) >= 0 else 0
+            direction_max = round(sensorsData['Direction_max']) if float(sensorsData['Direction_max']) < 360 and float(sensorsData['Direction_max']) >= 0 else 0
+            pression = round(sensorsData['Pressure']) if int(sensorsData['Pressure']) > 400 and int(sensorsData['Pressure']) < 1500 else 0
+            humidite = round(sensorsData['Humidity']) if int(sensorsData['Humidity']) <= 100 and int(sensorsData['Humidity']) >= 0 else 0
+            voltage = round(1000 * sensorsData['Battery'])
+            
             #Vitesse du vent
             #On envoie la vitesse du vent de l'intervalle [0 ; 255] en un octet
-            data.append(round(sensorsData['Speed']))
-            data.append(round(sensorsData['Speed_max']))
+            data.append(vitesse_moy)
+            data.append(vitesse_max)
 
             #Direction du vent
             #On envoie la direction entre [0 ; 360] en deux octects
-            direction = round(sensorsData['Direction'])
-            data.append(direction // 256)
-            data.append(direction % 256)
-            directionMax = round(sensorsData['Direction_max'])
-            data.append(directionMax // 256)
-            data.append(directionMax % 256)
+            data.append(direction_moy // 256)
+            data.append(direction_moy % 256)
+            data.append(direction_max // 256)
+            data.append(direction_max % 256)
+
+            #Humidité
+            #On envoie l'humidité directement car elle est comprise entre 0 et 100
+            data.append(humidite)
+
+            #Température
+            #On passe la température de l'intervalle [-50; 205] à l'intervalle entier [0 ; 255] qu'on envoie en un octet
+            data.append(temperature.to_bytes(1, 'big', signed=True))
+
+            #Pression
+            #On envoie la pression de l'intervalle [800 ; 1453] en deux octects
+            data.append(pression // 256)
+            data.append(pression % 256)     
 
             #Tension de la batterie
             #On convertie la tension en mV sur l'intervalle [0; 65536] en deux octets
-            voltage = round(1000 * sensorsData['Battery'])
             data.append(voltage // 256)
             data.append(voltage % 256)
 
