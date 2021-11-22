@@ -12,6 +12,9 @@ import RPi.GPIO as GPIO
 from os import system
 import pigpio
 
+
+
+
 MESURES_TRY = 1
 NB_MESURES = 1
 CONFIG_FILENAME = "config.ini"
@@ -19,8 +22,8 @@ MKRFOX_ADDR = 0x55
 ATTINY_ADDR = 0x44
 
 
-TTS_SPEED = 110
-TTS_PITCH = 80
+TTS_SPEED = 120
+TTS_PITCH = 30
 
 GPIO_GSM_POWER = 1
 GPIO_DHT11 = 23
@@ -79,7 +82,7 @@ sensorsData.update({"Direction":0, "Speed":0, "Direction_max":0, "Speed_max":0, 
 # Joue le message audio sur la radio
 radio.playVoiceMessage(sensorsData)
 
-#mkrfox.sendData(sensorsData)
+mkrfox.sendData(sensorsData)
 # attiny.askRead()
 # sleep(2)
 # print(attiny.read(14))

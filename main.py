@@ -10,6 +10,7 @@ from radio import Radio
 from attiny import Attiny
 import RPi.GPIO as GPIO
 from os import system
+import time
 import pigpio
 
 MESURES_TRY = 5
@@ -28,10 +29,11 @@ GPIO_TW = 5
 GPIO_PTT = 6
 
 
+
 # Configuration des loggers (log, data et batterie)
-logger.add("logs/logs.txt", rotation="1 days", retention=7, level="INFO", format="{time:HH:mm:ss} {message}", filter=lambda record: record["extra"]["type"] == "LOG")
-logger.add("logs/data.txt", rotation="1 days", retention=7, level="INFO", format="{time:HH:mm:ss} {message}", filter=lambda record: record["extra"]["type"] == "DATA")
-logger.add("logs/battery.txt", rotation="1 days", retention=7, level="INFO", format="{time:HH:mm:ss} {message}", filter=lambda record: record["extra"]["type"] == "BATTERY")
+logger.add("logs/logs.txt", rotation="1 days", retention=30, level="INFO", format="{time:HH:mm:ss} {message}", filter=lambda record: record["extra"]["type"] == "LOG")
+logger.add("logs/data.txt", rotation="1 days", retention=30, level="INFO", format="{time:HH:mm:ss} {message}", filter=lambda record: record["extra"]["type"] == "DATA")
+logger.add("logs/battery.txt", rotation="1 days", retention=30, level="INFO", format="{time:HH:mm:ss} {message}", filter=lambda record: record["extra"]["type"] == "BATTERY")
 logger_log = logger.bind(type="LOG")
 logger_data = logger.bind(type="DATA")
 logger_battery = logger.bind(type="BATTERY")
@@ -64,6 +66,8 @@ gsm = Gsm(gsm_power_gpio=GPIO_GSM_POWER, config = config, logger = logger_log, m
 sensors = Sensors(dht11_gpio = GPIO_DHT11, config = config, logger = logger_log, logger_data=logger_data, mesures_nbtry=MESURES_TRY, nbmesures=NB_MESURES)
 radio = Radio(config = config, logger = logger_log,  speed = TTS_SPEED, pitch = TTS_PITCH, tw_gpio = GPIO_TW, ptt_gpio = GPIO_PTT)
 
+mkrfox.write("state",1)
+
 # Initialisation GPIO
 GPIO.setmode(GPIO.BOARD)
 
@@ -75,13 +79,24 @@ if epochTime != 0:
 else:
     logger_log.info("Tentative d'actualiser l'heure depuis le module SigFox...")
     mkrfox.write("time", 0) # On envoie 0 au registre time du MKRFOX pour lui signaler de recupérer l'heure par le module Sigfox 
-    sleep(1) # On attends que l'heure soit actualisé sur le MKRFOX
+    while(mkrfox.read("state") & 0x02 != 1): # On attends que l'heure soit actualisé par le MKRFOX
+        sleep(1)
     epochTime = mkrfox.read("time") # On reçois l'heure du MKRFOX
     if epochTime != 0: # Si l'heure est différente de 0 on met à jour l'heure système du Raspberry, sinon erreur
         system("sudo date -s '@" + str(epochTime) + "'")
         logger_log.success("Date et heure actualisées depuis le module SigFox")
     else:
         logger_log.error("Impossible d'actualisées l'heure depuis le module SigFox")
+
+if time.localtime().tm_hour > config.getSleepHour or time.localtime().tm_hour < config.getWakeupHour():
+    mkrfox.write("state", 0) 
+    logger_log.info("Heure actuelle en dehors de la plage fonctionnement. Extinction du raspberry immédiate")
+    logger_log.info("#################################################################")
+    logger_log.info("########################### FIN CYCLE ###########################")
+    logger_log.info("#################################################################")
+    logger_log.info("\n\n")
+    # system("sudo shutdown -h now") 
+
 
 # Recupère les données des capteurs connectées au Raspberry
 sensorsData = sensors.getRPISensorsData()
@@ -124,7 +139,7 @@ GPIO.cleanup()
 pi.stop()
 
 # On signale au mkrfox que le cycle est terminé
-mkrfox.write("state", 2) 
+mkrfox.write("state", 0) 
 logger_log.info("Extinction du raspberry immédiate")
 logger_log.info("#################################################################")
 logger_log.info("########################### FIN CYCLE ###########################")
