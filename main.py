@@ -13,8 +13,8 @@ from os import system
 import time
 import pigpio
 
-MESURES_TRY = 5
-NB_MESURES = 3
+MESURES_TRY = 3
+NB_MESURES = 5
 CONFIG_FILENAME = "config.ini"
 MKRFOX_ADDR = 0x55
 ATTINY_ADDR = 0x44
@@ -64,7 +64,7 @@ mkrfox = Mkrfox(pi = pi, i2c_address = MKRFOX_ADDR, logger = logger_log, nb_try=
 attiny = Attiny(pi = pi, i2c_address = ATTINY_ADDR, logger = logger_log, nb_try=MESURES_TRY)
 gsm = Gsm(gsm_power_gpio=GPIO_GSM_POWER, config = config, logger = logger_log, mesures_nbtry=MESURES_TRY)
 sensors = Sensors(dht11_gpio = GPIO_DHT11, config = config, logger = logger_log, logger_data=logger_data, mesures_nbtry=MESURES_TRY, nbmesures=NB_MESURES)
-radio = Radio(config = config, logger = logger_log,  speed = TTS_SPEED, pitch = TTS_PITCH, tw_gpio = GPIO_TW, ptt_gpio = GPIO_PTT)
+radio = Radio(config = config, logger = logger_log, pi = pi, speed = TTS_SPEED, pitch = TTS_PITCH, tw_gpio = GPIO_TW, ptt_gpio = GPIO_PTT)
 
 mkrfox.write("state",1)
 
@@ -75,20 +75,23 @@ GPIO.setmode(GPIO.BOARD)
 epochTime = gsm.getDateTime() 
 if epochTime != 0:
     mkrfox.write("time", epochTime)
-    system("sudo date -s '@" + int(epochTime) + "'")
+    system("sudo date -s '@" + str(epochTime) + "'")
 else:
     logger_log.info("Tentative d'actualiser l'heure depuis le module SigFox...")
     mkrfox.write("time", 0) # On envoie 0 au registre time du MKRFOX pour lui signaler de recupérer l'heure par le module Sigfox 
-    while(mkrfox.read("state") & 0x02 != 1): # On attends que l'heure soit actualisé par le MKRFOX
-        sleep(1)
+    state = mkrfox.read("state")
+    while(state & 0b00000010 != 2): # On attends que l'heure soit actualisé par le MKRFOX
+        state = mkrfox.read("state")
     epochTime = mkrfox.read("time") # On reçois l'heure du MKRFOX
     if epochTime != 0: # Si l'heure est différente de 0 on met à jour l'heure système du Raspberry, sinon erreur
         system("sudo date -s '@" + str(epochTime) + "'")
         logger_log.success("Date et heure actualisées depuis le module SigFox")
     else:
         logger_log.error("Impossible d'actualisées l'heure depuis le module SigFox")
+    mkrfox.write("state", state & 0b11111101)
+    
 
-if time.localtime().tm_hour > config.getSleepHour or time.localtime().tm_hour < config.getWakeupHour():
+if time.localtime().tm_hour > config.getSleepHour() or time.localtime().tm_hour < config.getWakeupHour():
     mkrfox.write("state", 0) 
     logger_log.info("Heure actuelle en dehors de la plage fonctionnement. Extinction du raspberry immédiate")
     logger_log.info("#################################################################")
@@ -96,6 +99,7 @@ if time.localtime().tm_hour > config.getSleepHour or time.localtime().tm_hour < 
     logger_log.info("#################################################################")
     logger_log.info("\n\n")
     # system("sudo shutdown -h now") 
+    exit()
 
 
 # Recupère les données des capteurs connectées au Raspberry

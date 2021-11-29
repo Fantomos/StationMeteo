@@ -76,7 +76,7 @@ class Mkrfox:
 
             #Température
             #On passe la température de l'intervalle [-50; 205] à l'intervalle entier [0 ; 255] qu'on envoie en un octet
-            data.append(temperature.to_bytes(1, 'big', signed=True))
+            data.append(temperature.to_bytes(1, 'big', signed=True)[0])
 
             #Pression
             #On envoie la pression de l'intervalle [800 ; 1453] en deux octects

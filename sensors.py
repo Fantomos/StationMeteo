@@ -77,7 +77,7 @@ class Sensors:
             return self.thermometre.get_temperature()
         except Exception as e:
             self.logger.error(e)
-            self.logger.info("Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.")
+            self.logger.error("Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.")
             try:
                 return self.barometre.read_temperature()
             except Exception as e:
