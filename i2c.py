@@ -19,9 +19,10 @@ class I2C:
             try:
                 ## Référence de la connexion I2C.
                 self.handle = self.pi.i2c_open(1, i2c_address) # On tente d'établir la connexion
-            except: #Si ça ne marche pas on attend avant de rententer
+            except Exception as e: #Si ça ne marche pas on attend avant de rententer
+                logger.error(e)
                 logger.error("Impossible de se connecter au bus I2C, essai " + str(i) + "/" + str(nb_try) + ".")
-                sleep(0.5)
+                sleep(1)
             else: #Si ça marche on sort de la boucle
                 logger.success("Bus I2C connecté")
                 break
@@ -33,26 +34,30 @@ class I2C:
     # @return Retourne la valeur du registre ou 0 en cas d'erreur.
     def readReg(self, reg, length):
         try:
+            sleep(1)
             self.pi.i2c_write_device(self.handle, [reg])
-            sleep(0.001)
+            sleep(1)
             buffer = self.pi.i2c_read_device(self.handle, length)
             self.logger.success("Données " + str(buffer[1]) + " reçues sur le registre " + str(reg))
             return int.from_bytes(buffer[1], byteorder='big', signed=False) 
-        except:
-             self.logger.error("Impossible de lire le registre " + str(reg))
-             return 0
+        except Exception as e:
+            self.logger.error(e)
+            self.logger.error("Impossible de lire le registre " + str(reg))
+            return 0
 
     ## Opération de lecture de tous les registres sur le bus I2C.
     # @param length Le nombre d'octet à lire.
     # @return Retourne la valeur des registres ou 0 en cas d'erreur.
     def readAll(self, length):
         try:
+            sleep(1)
             buffer = self.pi.i2c_read_device(self.handle, length)
             self.logger.success("Données " + str(buffer[1]) + " reçues")
             return buffer[1]
-        except:
+        except Exception as e:
+            self.logger.error(e)
             self.logger.error("Impossible de lire les registres")
-            return 0
+            return bytearray([0] * length)
 
     ## Opération d'écriture d'un registre sur le bus I2C.
     # @param reg L'adresse du registre à écrire.
@@ -65,7 +70,9 @@ class I2C:
             else:
                 data_array = bytearray(data.to_bytes(length, 'big'))
             data_array.insert(0, reg)
+            sleep(1)
             self.pi.i2c_write_device(self.handle, data_array)
             self.logger.success("Données transmises sur le registre " + str(reg) + ", données=" + str(data) + ")")
-        except:
-             self.logger.error("Impossible d'envoyer les données sur le registre " + str(reg) + ", données=" + str(data) + ")")
+        except Exception as e:
+            self.logger.error(e)
+            self.logger.error("Impossible d'envoyer les données sur le registre " + str(reg) + ", données=" + str(data) + ")")
