@@ -56,7 +56,7 @@ class Mkrfox:
             direction_max = round(sensorsData['Direction_max']) if float(sensorsData['Direction_max']) < 360 and float(sensorsData['Direction_max']) >= 0 else 0
             pression = round(sensorsData['Pressure']) if int(sensorsData['Pressure']) > 400 and int(sensorsData['Pressure']) < 1500 else 0
             humidite = round(sensorsData['Humidity']) if int(sensorsData['Humidity']) <= 100 and int(sensorsData['Humidity']) >= 0 else 0
-            voltage = round(1000 * sensorsData['Battery'])
+            voltage = round(sensorsData['Battery'])
             
             #Vitesse du vent
             #On envoie la vitesse du vent de l'intervalle [0 ; 255] en un octet

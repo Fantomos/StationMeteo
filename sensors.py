@@ -142,6 +142,7 @@ class Sensors:
             donnees_baro = self.readBarometer()
             if donnees_baro/100 != 0:
                 P.append(donnees_baro/100)
+            time.sleep(1)
 
         
         #On renvoie un tableau contenant toutes les gradeurs moyennées

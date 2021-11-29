@@ -52,11 +52,14 @@ class I2C:
         try:
             sleep(1)
             buffer = self.pi.i2c_read_device(self.handle, length)
-            self.logger.success("Données " + str(buffer[1]) + " reçues")
-            return buffer[1]
+            if buffer[1]:
+                self.logger.success("Données " + str(buffer[1]) + " reçues")
+            else:
+                self.logger.error("Impossible de lire les registres de l'ATTINY")
+                return bytearray([0] * length)
         except Exception as e:
             self.logger.error(e)
-            self.logger.error("Impossible de lire les registres")
+            self.logger.error("Impossible de lire les registres de l'ATTINY")
             return bytearray([0] * length)
 
     ## Opération d'écriture d'un registre sur le bus I2C.
