@@ -24,6 +24,7 @@ class Gsm:
             try:
                 ## Référence du bus UART.
                 self.bus = serial.Serial("/dev/ttyAMA0", baudrate, timeout = timeout)
+                self.setup()
             except:
                 logger.error("Impossible d'ouvrir le port série pour le module GSM.")
                 self.bus = None
@@ -54,7 +55,6 @@ class Gsm:
     def sendAT(self, command):
         try:
             self.readBuffer()  #On vide le buffer avant
-            sleep(0.2)
             self.bus.write(("AT" + command + "\r\n").encode("8859")) #On écrit la commande
             return self.readBuffer() #On renvoie la réponse
         except:
@@ -85,17 +85,15 @@ class Gsm:
         if self.sendAT("") == "OK":
             self.power()
 
-    ## Entre le code PIN de la carte SIM
-    # @return Retourne la réponse à la commande.
-    def enterPIN(self):
-        return self.sendAT("+CPIN=\"0000\"")
-
-    ## Initialise le module pour envoyer des SMS
+    ## Initialise le module pour se connecter au réseau et envoyer des SMS
     # @return Retourne la réponse aux commandes.
-    def setupSMS(self):
-        output = self.sendAT("+CMGF=1") #Met en mode texte
-        output += self.sendAT("+CSCS=\"GSM\"") #Indique un encodage GSM
-        self.sendAT("+CPMS=\"SM\"") #Indique que le stockage se fait dans la carte SIM
+    def setup(self):
+        output = self.sendAT("+CPIN=\"0000\"") + "\n"
+        output += self.sendAT("+CLTS=1") + "\n" # Active la synchronisation de l'heure par le réseaux
+        output += self.sendAT("+CMGF=1") + "\n" # Met en mode texte
+        output += self.sendAT("+CSCS=\"GSM\"") + "\n" # Indique un encodage GSM
+        output += self.sendAT("+CPMS=\"SM\"") + "\n" # Indique que le stockage se fait dans la carte SIM
+        output += self.sendAT("&W") # Sauvegarde la configuration sur la ROM du module
         return output
 
     ## Envoie un seul SMS au numéro indiqué.
@@ -103,10 +101,9 @@ class Gsm:
     # @param txt Le message à envoyer.
     # @return Retourne la réponse aux commandes.
     def sendSingleSMS(self, numero, txt):
-        output = self.sendAT("+CMGS=\"" + numero + "\"") #On envoie le numéro
-        output += self.sendAT(txt[:159]) #On envoie le texte du SMS
+        output = self.sendAT("+CMGS=\"" + numero + "\"") + "\n" #On envoie le numéro
+        output += self.sendAT(txt[:159]) + "\n" #On envoie le texte du SMS
         output += self.sendAT("\x1A") #On envoie le caractère de fin
-        sleep(0.1)
         self.readBuffer() #On vide le buffer
         return output
 
@@ -170,7 +167,6 @@ class Gsm:
         self.readBuffer()
         buffer = self.sendAT("+CMGR=" + str(index)) #On demande le SMS
         data = buffer.split("\r\n")
-        sleep(0.1)
         try:
             number = data[0].split(",")[1].strip("\"")
             body = data[1]
@@ -183,13 +179,11 @@ class Gsm:
     # @param index L'indice du SMS à supprimer.
     # @return Retourne la réponse à la commande.
     def deleteSMS(self, index):
-        sleep(0.1)
         return self.sendAT("+CMGD=" + str(index) + ",0")
 
     ## Supprime tous les SMS.
     # @return Retourne la réponse à la commande.
     def deleteAllSMS(self):
-        sleep(0.1)
         self.readBuffer()
         return self.sendAT("+CMGD=0,4")
 
@@ -298,7 +292,6 @@ class Gsm:
                 elif status == 0: #Si ce n'est pas une des 3 possibilités, on renvoie le sms contenant les infos
                     self.sendSMS(sms[1], self.createSMS(sensorsData))
                 self.logger.success("Traitement du SMS numéro" + str(index) + "terminé")
-                sleep(0.1)
             #On supprime tous les SMS
             try:
                 self.deleteAllSMS()
@@ -306,7 +299,6 @@ class Gsm:
                 self.logger.error("Erreur lors de la suppression des SMS")
             else:
                 self.logger.success("Suppression des SMS terminée")
-            sleep(3)
         
         #On mesure la tension de la batterie, et s'il elle sous le seuil d'alerte, on envoie un message
         battery = sensorsData['Battery']

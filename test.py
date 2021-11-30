@@ -150,6 +150,15 @@ gsm = Gsm(gsm_power_gpio=GPIO_GSM_POWER, config = config, logger = logger_log, m
 # GPIO.cleanup()
 # pi.stop()
 
-print(gsm.enterPIN())
-print(gsm.setupSMS())
+print(gsm.setup())
+sleep(1)
 print(gsm.sendAT("+CCLK?"))
+sleep(1)
+print(gsm.sendAT("+CPOWD=1"))
+
+
+
+
+# print(attiny.getWindData())
+
+# pi.stop()

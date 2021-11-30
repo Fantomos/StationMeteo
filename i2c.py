@@ -54,6 +54,7 @@ class I2C:
             buffer = self.pi.i2c_read_device(self.handle, length)
             if buffer[1]:
                 self.logger.success("Données " + str(buffer[1]) + " reçues")
+                return buffer[1]
             else:
                 self.logger.error("Impossible de lire les registres de l'ATTINY")
                 return bytearray([0] * length)

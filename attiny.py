@@ -1,3 +1,4 @@
+from time import sleep
 from i2c import I2C
 ## Classe Attiny.
 # Cette classe permet la communication avec le microcontrolleur ATTINY.
@@ -27,9 +28,12 @@ class Attiny:
         return self.i2c_bus.readAll(length)
     
     def getWindData(self):
-        wind_array = self.read(14)
-        direction = int.from_bytes(wind_array[:2], byteorder='big', signed=False)
+        self.askRead()
+        sleep(2)
+        wind_array = self.read(8)
+        print(wind_array)
+        direction = int.from_bytes(wind_array[:2], byteorder='big', signed=False)/100
         speed = int.from_bytes(wind_array[2:4], byteorder='big', signed=False)
-        direction_max = int.from_bytes(wind_array[4:6], byteorder='big', signed=False)
+        direction_max = int.from_bytes(wind_array[4:6], byteorder='big', signed=False)/100
         speed_max = int.from_bytes(wind_array[6:8], byteorder='big', signed=False)
         return {"Direction": direction, "Speed":speed, "Direction_max":direction_max, "Speed_max":speed_max}
