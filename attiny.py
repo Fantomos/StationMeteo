@@ -31,7 +31,6 @@ class Attiny:
         self.askRead()
         sleep(2)
         wind_array = self.read(8)
-        print(wind_array)
         direction = int.from_bytes(wind_array[:2], byteorder='big', signed=False)/100
         speed = int.from_bytes(wind_array[2:4], byteorder='big', signed=False)
         direction_max = int.from_bytes(wind_array[4:6], byteorder='big', signed=False)/100

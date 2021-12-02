@@ -8,7 +8,6 @@ from loguru import logger
 from sensors import Sensors
 from radio import Radio
 from attiny import Attiny
-import RPi.GPIO as GPIO
 from os import system
 import time
 import pigpio
@@ -68,8 +67,6 @@ radio = Radio(config = config, logger = logger_log, pi = pi, speed = TTS_SPEED, 
 
 mkrfox.write("state",1)
 
-# Initialisation GPIO
-GPIO.setmode(GPIO.BOARD)
 
 # On récupère date et heure du GSM si possible, sinon on recupère sur le MKRFOX
 epochTime = gsm.getDateTime() 
@@ -117,7 +114,7 @@ logger_data.info(",".join([str(d) for d in sensorsData.items()]))
 # Récupère la tension de la batterie et l'enregistre dans un log
 logger_log.info("Lecture de la tension de la batterie...")
 try:
-    battery = mkrfox.read("battery")/10
+    battery = mkrfox.read("battery")
 except:
     logger_log.error("Impossible de lire la tension de la batterie")
     battery = 0
@@ -137,10 +134,6 @@ gsm.respondToSMS(sensorsData)
 
 #On éteint le module GSM
 gsm.turnOff() 
-        
-#On nettoie les entrées/sorties
-GPIO.cleanup()
-pi.stop()
 
 # On signale au mkrfox que le cycle est terminé
 mkrfox.write("state", 0) 
@@ -150,6 +143,8 @@ logger_log.info("########################### FIN CYCLE #########################
 logger_log.info("#################################################################")
 logger_log.info("\n\n")
 
+#On nettoie les entrées/sorties
+pi.stop()
 
 # On éteint le Rpi
 #system("sudo shutdown -h now") 

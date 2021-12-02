@@ -24,16 +24,18 @@ class Gsm:
             try:
                 ## Référence du bus UART.
                 self.bus = serial.Serial("/dev/ttyAMA0", baudrate, timeout = timeout)
+                self.logger.info("Configuration du module GSM...")
                 self.setup()
-            except:
-                logger.error("Impossible d'ouvrir le port série pour le module GSM.")
+            except Exception as e:
+                self.logger.error(e)
+                logger.error("Impossible d'ouvrir le port série ou de configurer le module GSM.")
                 self.bus = None
             else: #Si ça marche on sort de la boucle
-                logger.success("Bus série avec le GSM ouvert")
+                logger.success("Module GSM configuré")
                 break
         
     ## Liste des commandes possible par SMS.
-    command = ["batterie", "site", "nom", "debut", "début", "fin", "altitude", "logs", "data", "maitre", "maître"]
+    command = ["batterie", "site", "nom", "debut", "début", "eveil" , "éveil","fin", "extinction","altitude", "logs", "data", "maitre", "maître","aide"]
 
     ## Lit les données sur le bus série.
     # @return Retourne les données.
@@ -46,7 +48,8 @@ class Gsm:
                 buffer = self.bus.read(1000).decode("8859")
                 output += buffer
             return output.strip()
-        except:
+        except Exception as e:
+            self.logger.error(e)
             self.logger.error("Erreur lors de la lecture du buffer.")
             return ""
 
@@ -57,7 +60,8 @@ class Gsm:
             self.readBuffer()  #On vide le buffer avant
             self.bus.write(("AT" + command + "\r\n").encode("8859")) #On écrit la commande
             return self.readBuffer() #On renvoie la réponse
-        except:
+        except Exception as e:
+            self.logger.error(e)
             self.logger.error("Erreur lors de l'envoi de la commande " + str(command) + ".")
             return "error"
             
@@ -92,34 +96,19 @@ class Gsm:
         output += self.sendAT("+CLTS=1") + "\n" # Active la synchronisation de l'heure par le réseaux
         output += self.sendAT("+CMGF=1") + "\n" # Met en mode texte
         output += self.sendAT("+CSCS=\"GSM\"") + "\n" # Indique un encodage GSM
-        output += self.sendAT("+CPMS=\"SM\"") + "\n" # Indique que le stockage se fait dans la carte SIM
+        output += self.sendAT("+CPMS=\"SM\",\"SM\",\"SM\"") + "\n" # Indique que le stockage se fait dans la carte SIM
         output += self.sendAT("&W") # Sauvegarde la configuration sur la ROM du module
         return output
 
-    ## Envoie un seul SMS au numéro indiqué.
-    # @param numero Le numéro de téléphone auquel envoyer un SMS.
-    # @param txt Le message à envoyer.
-    # @return Retourne la réponse aux commandes.
-    def sendSingleSMS(self, numero, txt):
-        output = self.sendAT("+CMGS=\"" + numero + "\"") + "\n" #On envoie le numéro
-        output += self.sendAT(txt[:159]) + "\n" #On envoie le texte du SMS
-        output += self.sendAT("\x1A") #On envoie le caractère de fin
-        self.readBuffer() #On vide le buffer
-        return output
-
-    ## Envoie autant de SMS que nécessaire au numéro indiqué pour envoyer le texte indiqué.
+    ## Envoie un SMS au numéro indiqué.
     # @param numero Le numéro de téléphone auquel envoyer un SMS.
     # @param txt Le message à envoyer.
     # @return Retourne la réponse aux commandes.
     def sendSMS(self, numero, txt):
-        output = []
-        sms_list = [txt[150*i:150*(i+1)] for i in range(1+len(txt) // 150)] #On découpe le texte en morceau d'au plus 150 caractères de long
-        for i in range(len(sms_list)): #On envoie chaque morceau
-            output.append(self.sendSingleSMS(numero, sms_list[i]))
-            if i < len(sms_list) - 1: #Si ce n'est pas le dernier morceau, on attend avant le prochain
-                sleep(1.5)
-        self.readBuffer()
-        return ",".join(output)
+        output = self.sendAT("+CMGS=\"" + numero + "\"\r" + txt) + "\n" #On envoie le numéro
+        self.bus.write(bytes([26]))
+        self.readBuffer() #On vide le buffer
+        return output
 
     ## Renvoie la date sous la forme d'un tableau [année, mois, jour, heure, minute, seconde].
     # @return Retourne le timestamp UNIX représentant le temps actuel ou 0 en cas d'erreur lors de l'accés au module.
@@ -130,22 +119,13 @@ class Gsm:
             datetime = buffer.split("\"")[1]
             date = datetime.split(",")[0].split("/")
             clock = datetime.split(",")[1].split("+")[0].split(":")
-            date[2] = "20" + date[2]
-            return mktime((int(date[2]), int(date[1]), int(date[0]), int(clock[0]), int(clock[1]), int(clock[2]), 0, 0, -1))
+            date[0] = "20" + date[0]
+            return round(mktime((int(date[0]), int(date[1]), int(date[2]), int(clock[0]), int(clock[1]), int(clock[2]), 0, 0, -1)))
         else:
             self.logger.error("Impossible d'obtenir la date et heure depuis le module GSM")
             return 0
         
-    ## Renvoie le nombre de SMS dans la mémoire de la carte. On reçoit une réponse sous la forme "+CPMS: x,y,x,y,x,y", où x est le nombre de message stocké et y la capacité.
-    # @return Retourne le nombre de SMS ou -1 en cas d'erreur.
-    def getSMSCount(self):
-        buffer = self.sendAT("+CPMS=\"SM\"")
-        try:
-            return int(buffer[7:].split(",")[0])
-        except:
-            return -1
-        
-    ## Renvoie les indices des SMS enregistrés (nombre entre 1 et 50]
+    ## Renvoie les indices des SMS enregistrés (nombre entre 1 et 50)
     # @return Retourne la listes des indices des SMS enregistrés.
     def getSMSIndexes(self):
         buffer = self.sendAT("+CMGL=\"ALL\"").split("\r\n")
@@ -156,7 +136,8 @@ class Gsm:
                     index = data[7:].split(",")[0]
                     if not index in indexes:
                         indexes.append(index)
-                except:
+                except Exception as E:
+                    self.logger.error(E)
                     self.logger.error("Erreur dans la récupération des index")
         return indexes
 
@@ -165,13 +146,13 @@ class Gsm:
     # @return Retourne le message et le numéro de téléphone de l'expéditeur ou un tableau vide en cas d'erreur lors de la lecture.
     def readSMS(self, index):
         self.readBuffer()
-        buffer = self.sendAT("+CMGR=" + str(index)) #On demande le SMS
-        data = buffer.split("\r\n")
+        buffer = self.sendAT("+CMGR=" + str(index)) # On demande la lecture du SMS
         try:
-            number = data[0].split(",")[1].strip("\"")
-            body = data[1]
-            return [convertToAscii(body), number]
-        except:
+            number = buffer.split(",")[1].strip("\"") # On parse la réponse
+            text = buffer.split("\r\n")[2]
+            return [text, number]
+        except Exception as E:
+            self.logger.error(E)
             self.logger.error("Erreur lors de la lecture du SMS d'indice " + str(index))
             return []
 
@@ -185,24 +166,21 @@ class Gsm:
     # @return Retourne la réponse à la commande.
     def deleteAllSMS(self):
         self.readBuffer()
-        return self.sendAT("+CMGD=0,4")
+        return self.sendAT("+CMGD=1,4")
 
     ## Renvoie le status d'un SMS.
     # @param sms Le SMS dont l'on souhaite obtenir le status.
-    # @return Retourne le status du SMS. -1 = SMS vide. 0 = SMS normal (dans tous les cas sauf ceux ci-dessous). 1 = commande pour modifier un paramètre (si le texte contient "=" et une commande valide). 2 = commande pour lire un paramètre (si le texte contient "?" et une commande valide). 3 = mot de passe reçu (si le texte contient le mot de passe). 
+    # @return Retourne le status du SMS. 0 = SMS normal (dans tous les cas sauf ceux ci-dessous). 1 = commande pour modifier un paramètre (si le texte contient "=" et une commande valide). 2 = commande pour lire un paramètre (si le texte contient "?" et une commande valide). 3 = mot de passe reçu (si le texte contient le mot de passe). 
     def getStatus(self ,sms):
-        if len(sms) > 1:
-            sms = sms[0]
-            if ("=" in sms and sms.split("=")[0].lower().strip() in self.command):
-                return 1
-            elif ("?" in sms and sms.split("?")[0].lower().strip() in self.command):
-                return 2
-            elif (self.config.getGsmPswd() in sms):
-                return 3
-            else:
-                return 0
+        if ("=" in sms and sms.split("=")[0].lower().strip() in self.command):
+            return 1
+        elif ("?" in sms and sms.split("?")[0].lower().strip() in self.command):
+            return 2
+        elif (self.config.getGsmPswd() in sms):
+            return 3
         else:
-            return -1
+            return 0
+
 
     ## Exécute une commande de lecture de paramètre à partir du texte du sms.
     # @param command La commande à exécuter.
@@ -211,25 +189,37 @@ class Gsm:
     def executeGetCommand(self, command, sensorsData):
         #On récupère ce qui est avant le ?, on le met en minuscule et on enlève les espaces avant et après
         word = command.split("?")[0].lower().strip()
-        print("command : " + word)
+
         #Selon la commande, on effectue différentes actions
         if word == "batterie":
-            return str(sensorsData["battery"]) + " V"
+            self.logger.info("Envoi de la tension de la batterie")
+            return "Tension de la batterie : " + str(sensorsData["Battery"]) + " mV"
         elif word == "site" or word == "nom":
-            return "Site : \n" + self.config.getSiteName()
-        elif word == "debut" or word == "début":
-            return "Heure d'éveil de la station : " + self.config.getWakeupHour() + " h"
-        elif word == "fin":
-            return "Heure d'extinction de la station : " + self.config.getSleepHour() + " h"
+            self.logger.info("Envoi du nom de la station")
+            return "Nom de la station : " + str(self.config.getSiteName())
+        elif word == "debut" or word == "début" or word == "eveil" or word == "éveil":
+            self.logger.info("Envoi de l'heure d'éveil de la station")
+            return "Heure d'éveil de la station : " + str(self.config.getWakeupHour()) + " h"
+        elif word == "fin" or word == "extinction":
+            self.logger.info("Envoi de l'heure d'extinction de la station")
+            return "Heure d'extinction de la station : " + str(self.config.getSleepHour()) + " h"
         elif word == "altitude":
-            return "Altitude de la station : " + self.config.getSiteAltitude() + " m"
+            self.logger.info("Envoi de l'altitude de la station")
+            return "Altitude de la station : " + str(self.config.getSiteAltitude()) + " m"
         elif word == "logs":
+            self.logger.info("Envoi des logs")
             return self.config.getNLogs(command.split("?")[1].strip() if command.split("?")[1].strip().isnumeric() else 1)
         elif word == "data":
+            self.logger.info("Envoi des N dernières données")
             return self.config.getData() #TODO
+        elif word == "aide":
+            self.logger.info("Envoi de la liste des commandes")
+            return "Envoyez n'importe quel message pour obtenir le dernier bulletin météo. \nVotre sms peut aussi contenir l'une des commandes suivantes : batterie?, nom?, altitude?, eveil?, extinction?, maitre?"
         elif word == "maitre" or word == "maître":
-            return "Numéro maître de la station :\n" + self.config.getGsmMaster()
+            self.logger.info("Envoi du numéro maître de la station")
+            return "Numéro maitre de la station : " + str(self.config.getGsmMaster())
         
+        self.logger.info("Commande inconnue")
         return "Commande inconnue."
 
     ## Exécute une commande de modification de paramètres à partir d'un sms, et renvoie la réponse.
@@ -240,62 +230,106 @@ class Gsm:
         word = command.split("=")[0].lower().strip()
         arg = command.split("=")[1].strip()
         #Selon la commande, on effectue différentes actions
-        if word == "debut" or word == "début":
-            result = self.config.setWakeupHour(arg)
-            if result:
-                return "Heure d'éveil correctement mise à jour : \n" + str(arg) + " h"
+        if word == "debut" or word == "début" or word == "eveil" or word == "éveil":
+            try:
+                self.config.setWakeupHour(str(int(arg)))
+            except Exception as e:
+                self.logger.error(e)
+                self.logger.error("Impossible de mettre à jour l'heure de réveil")
+                return "Heure de réveil incorrecte, merci de n'envoyer qu'un nombre entre 0 et 23."
             else:
-                return "Heure d'éveil incorrecte, merci de n'envoyer qu'un nombre entre 0 et 23."
-        elif word == "fin":
-            result = self.config.setSleepHour(arg)
-            if result:
-                return "Heure d'extinction correctement mise à jour : \n" + str(arg) + " h"
-            else:
+                self.logger.success("L'heure de réveil a été correctement mise à jour : " + str(arg) + "h")
+                return "Heure de réveil correctement mise a jour : " + str(arg) + " h"
+
+        elif word == "fin" or word == "extinction":
+            try:
+                self.config.setSleepHour(str(int(arg)))
+            except Exception as e:
+                self.logger.error(e)
+                self.logger.error("Impossible de mettre à jour l'heure d'extinction")
                 return "Heure d'extinction incorrecte, merci de n'envoyer qu'un nombre entre 0 et 23."
+            else:
+                self.logger.success("L'heure d'extinction a été correctement mise à jour : " + str(arg) + "h")
+                return "Heure d'extinction correctement mise a jour : " + str(arg) + "h"
+
         elif word == "site" or word == "nom":
-            result = self.config.setSiteName(arg)
-            if result:
-                return "Site correctement mis à jour : \n\"" + str(arg[:125]) + "\""
-            else:
+            try:
+                self.config.setSiteName(str(arg[:125]))
+            except Exception as e:
+                self.logger.error(e)
+                self.logger.error("Impossible de mettre à jour le nom de la station")
                 return "Une erreur est survenue, merci de réessayer."
-        elif word == "altitude":
-            result = self.config.setSiteAltitude(arg)
-            if result:
-                return "Altitude correctement mise à jour : \n" + str(arg) + " m"
             else:
+                self.logger.success("Le nom de la station a été correctement mise à jour : " + str(arg[:125]))
+                return "Le nom de la station a été correctement mis a jour : " + str(arg[:125])
+
+        elif word == "altitude":
+            try:
+                self.config.setSiteAltitude(str(int(arg)))
+            except Exception as e:
+                self.logger.error(e)
+                self.logger.error("Impossible de mettre à jour l'altitude")
                 return "Altitude incorrecte, merci de n'envoyer qu'un nombre."
+            else:
+                self.logger.success("L'altitude a été correctement mis à jour : " + str(arg))
+                return "Altitude correctement mise a jour : " + str(arg) + " m"
         
+        self.logger.info("Commande inconnue")
         return "Commande inconnue."
 
     ## Répond à tous les SMS reçus.
     # @param sensorsData Le rapport météo sous la forme d'un dictionnaire.
     def respondToSMS(self, sensorsData):
+        config_set = False
         self.logger.info("Analyse des SMS reçus...")
-        if self.getSMSCount() > 0: #Si on a reçu des SMS
-            indexes = self.getSMSIndexes() #On récupère la liste des indices des SMS
-            self.logger.success(str(len(indexes)) + " SMS reçus")
+        indexes = self.getSMSIndexes() #On récupère la liste des indices des SMS
+        self.logger.success(str(len(indexes)) + " SMS reçus")
+        if len(indexes) > 0: #Si on a bien reçu des SMS
             for index in indexes[:20]: #On les parcourt
-                self.logger.info("Traitement du SMS numéro" + str(index) + "...")
-                sms = self.readSMS(index) #On lit le sms (format [message, numéro])
-                print(index, sms)
-                status = self.getStatus(sms) #On récupère le status (commande, mot de passe, infos)
-                if status == 1: #S'il s'agit d'une commande d'écriture
-                    if (sms[1] == self.config.getGsmMaster()): #Si le numéro est le bon, on l'autorise
-                        self.sendSMS(sms[1], self.executeSetCommand(sms[0])) #On exécute la commande et on réponds le message de confirmation ou d'erreur
-                    else: #Sinon, on répond que ce n'est pas possible
-                        self.sendSMS(sms[1], "Vous n'avez pas la permission d'effectuer cette commande.")
-                elif status == 2: #S'il s'agit d'une commande de lecture, on renvoie la réponse adaptée
-                    self.sendSMS(sms[1], self.executeGetCommand(sms[0]), sensorsData)
-                elif status == 3: #S'il s'agit du mot de passe
-                    self.sendSMS(sms[1], "Vous etes désormais le nouveau responsable de la station.")
-                    self.config.setGsmMaster(sms[1])
-                elif status == 0: #Si ce n'est pas une des 3 possibilités, on renvoie le sms contenant les infos
-                    self.sendSMS(sms[1], self.createSMS(sensorsData))
-                self.logger.success("Traitement du SMS numéro" + str(index) + "terminé")
-            #On supprime tous les SMS
-            try:
+                self.logger.info("Traitement du SMS numéro " + str(index) + "...")
+                try:
+                    sms = self.readSMS(index) #On lit le sms (format [message, numéro])
+                    self.logger.info("Lecture du SMS : " + str(sms[1]) + " | Message : " + str(sms[0]))
+                    status = self.getStatus(sms[0]) #On récupère le status (commande, mot de passe, infos)
+                    if status == 1: #S'il s'agit d'une commande d'écriture
+                        if (sms[1] == self.config.getGsmMaster()): #Si le numéro est le bon, on l'autorise
+                            self.sendSMS(sms[1], self.executeSetCommand(sms[0])) #On exécute la commande et on réponds le message de confirmation ou d'erreur
+                            config_set = True
+                        else: #Sinon, on répond que ce n'est pas possible
+                            self.logger.info("Permission refusée : ce numéro n'est pas le maître de la station")
+                            self.sendSMS(sms[1], "Vous n'avez pas la permission d'effectuer cette commande.")
+                    elif status == 2: #S'il s'agit d'une commande de lecture, on renvoie la réponse adaptée
+                        self.sendSMS(sms[1], self.executeGetCommand(sms[0], sensorsData))
+                    elif status == 3: #S'il s'agit du mot de passe
+                        self.sendSMS(sms[1], "Vous etes désormais le nouveau responsable de la station.")
+                        self.config.setGsmMaster(str(sms[1]))
+                        config_set = True
+                        self.logger.info("Nouveau maître de la station : " + str(sms[1]))
+                    elif status == 0: #Si ce n'est pas une des 3 possibilités, on renvoie le sms contenant les infos
+                        self.sendSMS(sms[1], self.createSMS(sensorsData))
+                        self.logger.info("Envoie du rapport météo")
+                except Exception as e:
+                    self.logger.error(e)
+                    self.logger.error("Impossible de traiter le SMS numéro "+ str(index))
+                else :
+                    self.logger.success("Traitement du SMS numéro " + str(index) + " terminé")
+                sleep(5)
+           
+            if config_set :
+                try:
+                    self.config.saveChange()
+                except Exception as e:
+                    self.logger.error(e)
+                    self.logger.error("Impossible d'écrire sur le fichier de configuration")
+                else:
+                    self.logger.success("Fichier de configuration mis à jour")
+
+               
+
+            try:  #On supprime tous les SMS
                 self.deleteAllSMS()
-            except:
+            except Exception as e:
+                self.logger.error(e)
                 self.logger.error("Erreur lors de la suppression des SMS")
             else:
                 self.logger.success("Suppression des SMS terminée")
@@ -320,32 +354,13 @@ class Gsm:
         humidite = str(int(sensorsData['Humidity'])) if int(sensorsData['Humidity']) <= 100 and int(sensorsData['Humidity']) >= 0 else "n/a"
         hauteur_nuages = str(int(sensorsData['Cloud'])) if int(sensorsData['Cloud']) >= 0 else "n/a"
         
-        output = "[" + str(sensorsData['Time']) + "]\n"
-        output += "Temp: " + temperature + " C\n"
-        output += "Vent moy: " + vitesse_moy + "km/h " + direction_moy + "° \n"
-        output += "Vent max: " + vitesse_max + "km/h " + direction_max + "° \n"
-        output += "Humi: " + humidite + "%\n"
-        output += "Press: " + pression + "hPa\n"
-        output += "Haut nuages: " + hauteur_nuages + "m"
-        #On ajoute le nom du site et on coupe à 158 caractères pour éviter d'envoyer 2 SMS
-        if len(output) < 158:
-            output = (self.config.getSiteName() + " (" + self.config.getSiteAltitude() + " m)")[:157-len(output)] + "\n" + output
-        else:
-            output = output[:158]
-        return output
+        output = (self.config.getSiteName() + " (" + str(self.config.getSiteAltitude()) + " m)") + "\n"
+        output += "[" + str(sensorsData['Time']) + "]\n"
+        output += "Température : " + temperature + " C\n"
+        output += "Vent moyen : " + vitesse_moy + " km/h " + direction_moy + "\xB0 \n"
+        output += "Vent maximum : " + vitesse_max + " km/h " + direction_max + "\xB0 \n"
+        output += "Humidité : " + humidite + " %\n"
+        output += "Pression : " + pression + " hPa\n"
+        output += "Hauteur des nuages: " + hauteur_nuages + " m"
 
-## Convertis le message en ASCII.
-# @param body Le message à convertir.
-# @return Retourne le code ASCII ou le message en cas d'erreur.
-def convertToAscii(body):
-        try:
-            letters = body[::4]
-            output = ""
-            for letter in letters:
-                if len(letter) == 4 and sum([c in "0123456798ABCDEF" for c in letter]) == 4 and letter[0] == "0":
-                    output += chr(int(letter, 16))
-                else:
-                    return body
-            return output
-        except:
-            return body
+        return output

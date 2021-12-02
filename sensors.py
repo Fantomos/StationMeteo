@@ -136,9 +136,10 @@ class Sensors:
             temp = self.readThermometer()
             if temp != 0:
                 T.append(temp)
-            humi = self.readHygrometer()[0]
-            if humi is not None and humi != 0:
-                H.append(humi)
+            humi = self.readHygrometer()
+            if humi[0] is not None and humi != 0:
+                H.append(humi[0])
+                T.append(humi[1])
             donnees_baro = self.readBarometer()
             if donnees_baro/100 != 0:
                 P.append(donnees_baro/100)
