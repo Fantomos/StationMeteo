@@ -1,3 +1,8 @@
+
+## @file gsm.py
+# Définition de la classe gsm. Elle permet la communication avec le module GSM SIM800L.
+##
+
 import serial
 import RPi.GPIO as GPIO
 from time import sleep, mktime
@@ -6,15 +11,12 @@ from time import sleep, mktime
 # Cette classe permet la communication et la gestion du module GSM SIM800L via UART.
 class Gsm:
     ## Constructeur.
-    # @param gsm_power_gpio Numéro de pin pour allumer/éteindre le module GSM.
     # @param config Objet ConfigFile.
     # @param logger Logger principal.
     # @param mesures_nbtry Nombres d'essais maximum de l'initialisation des capteurs. La valeur par défaut est 5.
     # @param baudrate Baudrate du bus UART. La valeur par défaut est 115200.
     # @param timeout Timeout du bus UART. La valeur par défaut est 1.
-    def __init__(self, gsm_power_gpio , config, logger, mesures_nbtry = 5, baudrate = 115200, timeout = 1):
-        ##  Numéro de pin pour allumer/éteindre le module GSM.
-        self.power_gpio = gsm_power_gpio
+    def __init__(self, config, logger, mesures_nbtry = 5, baudrate = 115200, timeout = 1):
         ## Logger principal
         self.logger = logger
         ## Objet ConfigFile.

@@ -1,3 +1,8 @@
+
+## @file config.py
+# Définition de la classe config. Elle permet la sauvegarde et récupération des paramètres importants de la station depuis un fichier de configuration.
+##
+
 from configparser import ConfigParser
 
 

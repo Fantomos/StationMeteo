@@ -1,4 +1,7 @@
 
+## @file radio.py
+# Définition de la classe Radio. Elle permet la manipulation de la radio et l'utilisation de la synthèse vocale pour générer un message.
+##
 from voxpopuli import Voice
 from time import sleep
 from os import environ

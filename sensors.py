@@ -1,3 +1,8 @@
+
+## @file sensors.py
+# Définition de la classe Sensors. Elle permet la communication avec tous les capteurs connectés au Raspberry Pi.
+##
+
 from Adafruit_BMP.BMP085 import BMP085
 import Adafruit_DHT as DHT
 from w1thermsensor import W1ThermSensor

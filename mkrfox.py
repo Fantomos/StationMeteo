@@ -1,3 +1,8 @@
+
+## @file mkrfox.py
+# Définition de la classe Mkrfox. Elle permet la communication avec le MKRFOX1200 et la transmission vers le module SigFox.
+##
+
 from i2c import I2C
 
 ## Classe Mkrfox. 

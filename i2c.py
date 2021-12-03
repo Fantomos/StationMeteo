@@ -1,3 +1,9 @@
+
+## @file i2c.py
+# Définition de la classe I2C. Elle permet une utilisation simplifié du protocole et bus I2C.
+##
+
+
 from time import sleep
 
 ## Classe I2C. 

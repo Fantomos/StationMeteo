@@ -1,3 +1,8 @@
+
+## @file attiny.py
+# Définition de la classe attiny. Elle permet la communication avec l'ATTINY et la lecture des données du vent (vitesse et direction).
+##
+
 from time import sleep
 from i2c import I2C
 ## Classe Attiny.
@@ -14,10 +19,7 @@ class Attiny:
         ## Logger principal.
         self.logger = logger
     
-    ## Opération d'écriture d'un registre du MKRFOX.
-    # @param regName Nom du registre à écrire.
-    # @param data Les données à écrire.
-    # @param length Le nombre d'octet à écrire.
+    ## Emet une requête à l'ATTINY pour obtenir les données du vent
     def askRead(self):
         self.logger.info("Requête des données de vent à l'ATTINY")
         self.i2c_bus.writeReg(0x00, 0x11, 1)
@@ -29,6 +31,8 @@ class Attiny:
         self.logger.info("Récupération des données de vent à l'ATTINY")
         return self.i2c_bus.readAll(length)
     
+    ## Obtiens les données du vent à partir de l'ATTINY
+    # @return Les données du vent
     def getWindData(self):
         wind_array = self.read(8)
         direction = int.from_bytes(wind_array[:2], byteorder='big', signed=False)/100

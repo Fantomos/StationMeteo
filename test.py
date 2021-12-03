@@ -11,17 +11,17 @@ from attiny import Attiny
 from os import system
 import time
 import pigpio
-import threading
+
 
 MESURES_TRY = 3
-NB_MESURES = 1
-CONFIG_FILENAME = "config.ini"
-MKRFOX_ADDR = 0x55
-ATTINY_ADDR = 0x44
+NB_MESURES = 1 # Nom du fichier de configuration
+CONFIG_FILENAME = "config.ini" # Nom du fichier de configuration
+MKRFOX_ADDR = 0x55 # Addresse I2C du MKRFOX
+ATTINY_ADDR = 0x44 # Addresse I2C du ATTINY
 
 
-TTS_SPEED = 120
-TTS_PITCH = 30
+TTS_SPEED = 120 # Vitesse de lecture de la synthèse vocale
+TTS_PITCH = 30 # Tonalité de la synthèse vocale
 
 GPIO_GSM_POWER = 1
 GPIO_DHT11 = 23
@@ -161,15 +161,3 @@ logger_log.info("\n\n")
 #On nettoie les entrées/sorties
 pi.stop()
 
-# # print(gsm.setup())
-# # sleep(1)
-# # print(gsm.sendAT("+CCLK?"))
-# # sleep(1)
-# # print(gsm.sendAT("+CPOWD=1"))
-
-
-
-
-# # print(attiny.getWindData())
-
-# # pi.stop()
