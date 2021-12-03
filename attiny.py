@@ -19,17 +19,17 @@ class Attiny:
     # @param data Les données à écrire.
     # @param length Le nombre d'octet à écrire.
     def askRead(self):
+        self.logger.info("Requête des données de vent à l'ATTINY")
         self.i2c_bus.writeReg(0x00, 0x11, 1)
 
     ## Opération de lecture de tous les registres de l'ATTINY.
     # @param length Le nombre d'octet à lire.
     # @return Retourne la valeur du registre.
     def read(self, length):
+        self.logger.info("Récupération des données de vent à l'ATTINY")
         return self.i2c_bus.readAll(length)
     
     def getWindData(self):
-        self.askRead()
-        sleep(2)
         wind_array = self.read(8)
         direction = int.from_bytes(wind_array[:2], byteorder='big', signed=False)/100
         speed = int.from_bytes(wind_array[2:4], byteorder='big', signed=False)

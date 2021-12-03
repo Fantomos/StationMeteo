@@ -43,6 +43,19 @@ class Mkrfox:
     def write(self, regName, data):
         self.i2c_bus.writeReg(self.register[regName][0], data, self.register[regName][1])
 
+    ## Met à jours les différents paramètres du MKRFOX de configuration de la station.
+    # @param data Les paramètres à mettre à jour.
+    def updateConfig(self, data):
+        try:
+            self.write("sleep",data["sleep"])
+            self.write("wakeup",data["wakeup"])
+            self.write("battery_threshold",data["battery_threshold"])
+        except Exception as e:
+            self.logger.error(e)
+            self.logger.error("Impossible de mettre à jours les paramètres")
+        else:
+            self.logger.success("Paramètres mis à jours")
+
     ## Formate les données des capteurs sous forme d'un tableau d'octet.
     # @param sensorsData Les données des capteurs.
     # @return Retourne un tableau d'octet.

@@ -24,18 +24,16 @@ class Gsm:
             try:
                 ## Référence du bus UART.
                 self.bus = serial.Serial("/dev/ttyAMA0", baudrate, timeout = timeout)
-                self.logger.info("Configuration du module GSM...")
-                self.setup()
             except Exception as e:
                 self.logger.error(e)
-                logger.error("Impossible d'ouvrir le port série ou de configurer le module GSM.")
+                self.logger.error("Impossible d'ouvrir le port série ou de configurer le module GSM.")
                 self.bus = None
             else: #Si ça marche on sort de la boucle
-                logger.success("Module GSM configuré")
+                self.logger.success("Port série ouvert")
                 break
         
     ## Liste des commandes possible par SMS.
-    command = ["batterie", "site", "nom", "debut", "début", "eveil" , "éveil","fin", "extinction","altitude", "logs", "data", "maitre", "maître","aide"]
+    command = ["batterie", "seuil","site", "nom", "debut", "début", "eveil" , "éveil","reveil" , "réveil","fin", "extinction","altitude", "logs", "data", "maitre", "maître","aide"]
 
     ## Lit les données sur le bus série.
     # @return Retourne les données.
@@ -44,7 +42,7 @@ class Gsm:
             buffer = self.bus.read(1000).decode("8859")
             output = buffer
             while (len(buffer) > 0):
-                sleep(0.2)
+                sleep(0.01)
                 buffer = self.bus.read(1000).decode("8859")
                 output += buffer
             return output.strip()
@@ -64,20 +62,11 @@ class Gsm:
             self.logger.error(e)
             self.logger.error("Erreur lors de l'envoi de la commande " + str(command) + ".")
             return "error"
-            
-    ## Envoie une impulsion de 2 sec sur le pin POWER du module GSM pour l'éteindre/allumer.
-    def power(self):
-        GPIO.setmode(GPIO.BOARD)
-        GPIO.setup(self.power_gpio, GPIO.OUT)
-        GPIO.output(self.power_gpio, GPIO.HIGH)
-        sleep(1)
-        GPIO.output(self.power_gpio, GPIO.LOW)
-        sleep(1)
-        GPIO.setup(self.power_gpio, GPIO.IN)
+    
 
     ## Allume le module GSM (power + commande vide) et renvoie le résultat d'une commande vide.
     # @return Retourne OK ou not OK si le module ne réponds pas.
-    def turnOn(self):
+    def sleepOn(self):
         if self.sendAT("") != "OK":
             self.power()
             return "OK"
@@ -85,19 +74,20 @@ class Gsm:
             return "not OK"
 
     ## Eteint la station
-    def turnOff(self):
+    def sleepOff(self):
         if self.sendAT("") == "OK":
             self.power()
 
     ## Initialise le module pour se connecter au réseau et envoyer des SMS
     # @return Retourne la réponse aux commandes.
     def setup(self):
-        output = self.sendAT("+CPIN=\"0000\"") + "\n"
-        output += self.sendAT("+CLTS=1") + "\n" # Active la synchronisation de l'heure par le réseaux
+        self.logger.info("Configuration du module GSM...")
+        output = self.sendAT("+CLTS=1") + "\n" # Active la synchronisation de l'heure par le réseaux
         output += self.sendAT("+CMGF=1") + "\n" # Met en mode texte
         output += self.sendAT("+CSCS=\"GSM\"") + "\n" # Indique un encodage GSM
         output += self.sendAT("+CPMS=\"SM\",\"SM\",\"SM\"") + "\n" # Indique que le stockage se fait dans la carte SIM
         output += self.sendAT("&W") # Sauvegarde la configuration sur la ROM du module
+        self.logger.success("Module GSM configuré")
         return output
 
     ## Envoie un SMS au numéro indiqué.
@@ -194,12 +184,15 @@ class Gsm:
         if word == "batterie":
             self.logger.info("Envoi de la tension de la batterie")
             return "Tension de la batterie : " + str(sensorsData["Battery"]) + " mV"
+        if word == "seuil":
+            self.logger.info("Envoi du seuil limite de la batterie")
+            return "Seuil de la batterie : " + str(self.config.getBatteryLimit()) + " mV"
         elif word == "site" or word == "nom":
             self.logger.info("Envoi du nom de la station")
             return "Nom de la station : " + str(self.config.getSiteName())
-        elif word == "debut" or word == "début" or word == "eveil" or word == "éveil":
-            self.logger.info("Envoi de l'heure d'éveil de la station")
-            return "Heure d'éveil de la station : " + str(self.config.getWakeupHour()) + " h"
+        elif word == "debut" or word == "début" or word == "eveil" or word == "éveil" or word == "reveil" or word == "réveil":
+            self.logger.info("Envoi de l'heure de réveil de la station")
+            return "Heure de révéil de la station : " + str(self.config.getWakeupHour()) + " h"
         elif word == "fin" or word == "extinction":
             self.logger.info("Envoi de l'heure d'extinction de la station")
             return "Heure d'extinction de la station : " + str(self.config.getSleepHour()) + " h"
@@ -214,7 +207,7 @@ class Gsm:
             return self.config.getData() #TODO
         elif word == "aide":
             self.logger.info("Envoi de la liste des commandes")
-            return "Envoyez n'importe quel message pour obtenir le dernier bulletin météo. \nVotre sms peut aussi contenir l'une des commandes suivantes : batterie?, nom?, altitude?, eveil?, extinction?, maitre?"
+            return "Envoyez n'importe quel message pour obtenir le dernier bulletin météo. \nVotre sms peut aussi contenir l'une des commandes suivantes : batterie?, seuil?, nom?, altitude?, eveil?, extinction?, maitre?"
         elif word == "maitre" or word == "maître":
             self.logger.info("Envoi du numéro maître de la station")
             return "Numéro maitre de la station : " + str(self.config.getGsmMaster())
@@ -232,22 +225,33 @@ class Gsm:
         #Selon la commande, on effectue différentes actions
         if word == "debut" or word == "début" or word == "eveil" or word == "éveil":
             try:
-                self.config.setWakeupHour(str(int(arg)))
+                if(int(arg) >= int(self.config.getSleepHour())):
+                    raise Exception("Heure de réveil supérieur à l'heure d'extinction")
+                elif(int(arg)<0):
+                    raise Exception("Heure de réveil inferieur à 0")
+                else:
+                     self.config.setWakeupHour(str(int(arg)))
+                    
             except Exception as e:
                 self.logger.error(e)
                 self.logger.error("Impossible de mettre à jour l'heure de réveil")
-                return "Heure de réveil incorrecte, merci de n'envoyer qu'un nombre entre 0 et 23."
+                return "Heure de réveil incorrecte, merci de n'envoyer qu'un nombre entre 0 et l'heure d'extinction."
             else:
                 self.logger.success("L'heure de réveil a été correctement mise à jour : " + str(arg) + "h")
                 return "Heure de réveil correctement mise a jour : " + str(arg) + " h"
 
         elif word == "fin" or word == "extinction":
             try:
-                self.config.setSleepHour(str(int(arg)))
+                if(int(arg) <= int(self.config.getWakeupHour())):
+                    raise Exception("Heure d'extinction inférieur à l'heure d'extinction")
+                elif(int(arg)>23):
+                    raise Exception("Heure de réveil inferieur à 0")
+                else:
+                    self.config.setSleepHour(str(int(arg)))
             except Exception as e:
                 self.logger.error(e)
                 self.logger.error("Impossible de mettre à jour l'heure d'extinction")
-                return "Heure d'extinction incorrecte, merci de n'envoyer qu'un nombre entre 0 et 23."
+                return "Heure d'extinction incorrecte, merci de n'envoyer qu'un nombre entre l'heure de réveil et 23."
             else:
                 self.logger.success("L'heure d'extinction a été correctement mise à jour : " + str(arg) + "h")
                 return "Heure d'extinction correctement mise a jour : " + str(arg) + "h"
@@ -273,6 +277,22 @@ class Gsm:
             else:
                 self.logger.success("L'altitude a été correctement mis à jour : " + str(arg))
                 return "Altitude correctement mise a jour : " + str(arg) + " m"
+        
+        elif word == "seuil":
+            try:
+                if(int(arg) >= 12000):
+                    raise Exception("Seuil trop élevé")
+                elif(int(arg)<= 10000):
+                    raise Exception("Seuil trop faible")
+                else:
+                    self.config.setBatteryLimit(str(int(arg)))
+            except Exception as e:
+                self.logger.error(e)
+                self.logger.error("Impossible de mettre à jour le seuil de la batterie")
+                return "Seuil incorrect, merci de n'envoyer qu'un nombre."
+            else:
+                self.logger.success("Le seuil de la batterie a été correctement mis à jour : " + str(arg))
+                return "Le seuil de la batterie a été correctement mis a jour : " + str(arg) + " mV"
         
         self.logger.info("Commande inconnue")
         return "Commande inconnue."
@@ -307,7 +327,7 @@ class Gsm:
                         self.logger.info("Nouveau maître de la station : " + str(sms[1]))
                     elif status == 0: #Si ce n'est pas une des 3 possibilités, on renvoie le sms contenant les infos
                         self.sendSMS(sms[1], self.createSMS(sensorsData))
-                        self.logger.info("Envoie du rapport météo")
+                        self.logger.info("Envoie du bulletin météo")
                 except Exception as e:
                     self.logger.error(e)
                     self.logger.error("Impossible de traiter le SMS numéro "+ str(index))
@@ -336,8 +356,8 @@ class Gsm:
         
         #On mesure la tension de la batterie, et s'il elle sous le seuil d'alerte, on envoie un message
         battery = sensorsData['Battery']
-        if battery <= self.config.getBatteryLimit():
-            self.sendSMS(self.config.getGsmMaster(), "[" +  sensorsData['Time'] + "]\n/!\\ La tension de la batterie est faible (" + str(battery) + " V), la station risque de ne plus fonctionner correctement. /!\\")
+        if battery <= int(self.config.getBatteryLimit())-200:
+            self.sendSMS(self.config.getGsmMaster(), "[" +  sensorsData['Time'] + "]\n/!\\ La tension de la batterie (" + str(battery) + " mV) est proche du seuil (" + str(self.config.getBatteryLimit()) + " mV) , la station risque de ne plus fonctionner correctement. /!\\")
 
 
 

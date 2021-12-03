@@ -54,7 +54,7 @@ class ConfigFile:
     ## Modifie l'heure d'extinction de la station.
     # @param hour La nouvelle heure d'extinction.
     def setSleepHour(self, hour):
-        self.subconfig['sleep'] = hour
+        self.subconfig['sleep'] = round(hour)
 
     ## Modifie le nom de la station.
     # @param name La nouveau nom de la station.
@@ -74,7 +74,7 @@ class ConfigFile:
     ## Recupère la tension de la batterie limite.
     # @return Retourne la tension limite de la batterie.
     def getBatteryLimit(self):
-        return self.subconfig.getfloat('seuil_alerte',11.5)
+        return self.subconfig.getint('seuil_alerte',11500)
 
     ## Recupère le mot de passe maître de la station.
     # @return Retourne le mot de passe maître de la station.

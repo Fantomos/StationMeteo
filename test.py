@@ -1,5 +1,5 @@
 #IMPORTS
-from time import sleep
+from time import mktime, sleep
 from attiny import Attiny
 from config import ConfigFile
 from gsm import Gsm
@@ -11,9 +11,10 @@ from attiny import Attiny
 from os import system
 import time
 import pigpio
+import threading
 
 MESURES_TRY = 3
-NB_MESURES = 5
+NB_MESURES = 1
 CONFIG_FILENAME = "config.ini"
 MKRFOX_ADDR = 0x55
 ATTINY_ADDR = 0x44
@@ -61,31 +62,41 @@ else:
 #Initialisation du bus I2C, PIC, Sensors, GSM, Sigfox et radio
 mkrfox = Mkrfox(pi = pi, i2c_address = MKRFOX_ADDR, logger = logger_log, nb_try=MESURES_TRY)
 attiny = Attiny(pi = pi, i2c_address = ATTINY_ADDR, logger = logger_log, nb_try=MESURES_TRY)
-gsm = Gsm(gsm_power_gpio=GPIO_GSM_POWER, config = config, logger = logger_log, mesures_nbtry=MESURES_TRY)
 sensors = Sensors(dht11_gpio = GPIO_DHT11, config = config, logger = logger_log, logger_data=logger_data, mesures_nbtry=MESURES_TRY, nbmesures=NB_MESURES)
 radio = Radio(config = config, logger = logger_log, pi = pi, speed = TTS_SPEED, pitch = TTS_PITCH, tw_gpio = GPIO_TW, ptt_gpio = GPIO_PTT)
+gsm = Gsm(gsm_power_gpio=GPIO_GSM_POWER, config = config, logger = logger_log, mesures_nbtry=MESURES_TRY)
 
-mkrfox.write("state",1)
+state = mkrfox.read("state")
+mkrfox.write("state",state | 0b00000001)
 
 
-# On récupère date et heure du GSM si possible, sinon on recupère sur le MKRFOX
-epochTime = gsm.getDateTime()
-if epochTime != 0:
-    mkrfox.write("time", epochTime)
-    system("sudo date -s '@" + str(epochTime) + "'")
-else:
-    logger_log.info("Tentative d'actualiser l'heure depuis le module SigFox...")
-    mkrfox.write("time", 0) # On envoie 0 au registre time du MKRFOX pour lui signaler de recupérer l'heure par le module Sigfox 
-    state = mkrfox.read("state")
-    while(state & 0b00000010 != 2): # On attends que l'heure soit actualisé par le MKRFOX
+# Si c'est le premier cycle de la journée alors on récupère date et heure du GSM si possible, sinon on recupère sur le MKRFOX
+if(state & 0b00000100 == 4):
+    gsm.setup()
+    epochTime = gsm.getDateTime()
+    if epochTime != 0:
+        mkrfox.write("time", epochTime)
+        system("sudo date -s '@" + str(epochTime) + "'")
+    else:
+        logger_log.info("Tentative d'actualiser l'heure depuis le module SigFox...")
+        mkrfox.write("time", 0) # On envoie 0 au registre time du MKRFOX pour lui signaler de recupérer l'heure par le module Sigfox 
         state = mkrfox.read("state")
-    epochTime = mkrfox.read("time") # On reçois l'heure du MKRFOX
+        while(state & 0b00000010 != 2): # On attends que l'heure soit actualisé par le MKRFOX
+            state = mkrfox.read("state")
+        epochTime = mkrfox.read("time") # On reçois l'heure du MKRFOX
+        if epochTime != 0: # Si l'heure est différente de 0 on met à jour l'heure système du Raspberry, sinon erreur
+            system("sudo date -s '@" + str(epochTime) + "'")
+            logger_log.success("Date et heure actualisées depuis le module SigFox")
+        else:
+            logger_log.error("Impossible d'actualisées l'heure depuis le module SigFox")
+        mkrfox.write("state", state & 0b11111101)
+else:
+    epochTime = mkrfox.read("time")
     if epochTime != 0: # Si l'heure est différente de 0 on met à jour l'heure système du Raspberry, sinon erreur
         system("sudo date -s '@" + str(epochTime) + "'")
-        logger_log.success("Date et heure actualisées depuis le module SigFox")
+        logger_log.success("Date et heure actualisées depuis le MKRFOX")
     else:
-        logger_log.error("Impossible d'actualisées l'heure depuis le module SigFox")
-    mkrfox.write("state", state & 0b11111101)
+        logger_log.error("Impossible d'actualisées l'heure depuis le MKRFOX")
     
 
 if time.localtime().tm_hour > config.getSleepHour() or time.localtime().tm_hour < config.getWakeupHour():
@@ -98,6 +109,8 @@ if time.localtime().tm_hour > config.getSleepHour() or time.localtime().tm_hour 
     # system("sudo shutdown -h now") 
     exit()
 
+# Requête des données du vent
+attiny.askRead()
 
 # Recupère les données des capteurs connectées au Raspberry
 sensorsData = sensors.getRPISensorsData()
@@ -123,17 +136,18 @@ else:
 sensorsData["Battery"] = battery
 logger_battery.info(sensorsData['Battery'])
 
-# # Joue le message audio sur la radio
-# radio.playVoiceMessage(sensorsData)
+# Joue le message audio sur la radio
+radio.playVoiceMessage(sensorsData)
 
-# # Envoie les données au MKRFOX pour transmision via SigFox
-# mkrfox.sendData(sensorsData)
+# Envoie les données au MKRFOX pour transmision via SigFox
+mkrfox.sendData(sensorsData)
 
-# # # Envoie les données via SMS
+# Envoie les données via SMS
 gsm.respondToSMS(sensorsData)
 
-# #On éteint le module GSM
-# #gsm.turnOff() 
+# Met à jour la configuration sur le MKRFOX
+configData = {"sleep":config.getSleepHour(),"wakeup":config.getWakeupHour(),"battery_threshold":config.getBatteryLimit()}
+mkrfox.updateConfig(configData)
 
 
 # On signale au mkrfox que le cycle est terminé

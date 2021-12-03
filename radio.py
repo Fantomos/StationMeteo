@@ -5,6 +5,7 @@ from os import environ
 environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 from pygame import mixer
 import pigpio
+import threading
 
 ## Classe Radio. 
 #  Cette classe permet la communication du rapport météo par la radio. Elle utilise une synthèse vocale sous le nom de Voxpopuli. La fonction mixer de PyGame est utilisé pour lire les fichiers audios générés.
