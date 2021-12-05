@@ -11,6 +11,7 @@ from attiny import Attiny
 from os import system
 import time
 import pigpio
+from threading import Thread
 
 
 MESURES_TRY = 3
@@ -137,7 +138,8 @@ sensorsData["Battery"] = battery
 logger_battery.info(sensorsData['Battery'])
 
 # Joue le message audio sur la radio
-radio.playVoiceMessage(sensorsData)
+Thread(target = Radio.playVoiceMessage, args=(radio,sensorsData)).start()
+# radio.playVoiceMessage(sensorsData)
 
 # Envoie les données au MKRFOX pour transmision via SigFox
 mkrfox.sendData(sensorsData)

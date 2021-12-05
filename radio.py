@@ -75,18 +75,18 @@ class Radio:
                 wavfile.write(wav)
             #On allume la radio, puis le PTT
             self.pi.write(self.tw_gpio,1)
-            sleep(1)
+            sleep(0.1)
             self.pi.write(self.ptt_gpio,1)
-            sleep(1)
+            sleep(0.1)
             #On joue un bip d'introduction
             self.playSound("bip.wav")
-            sleep(1)
+            sleep(0.1)
             #On joue le message
             self.playSound("radio.wav")
             #On éteint le PTT et la radio
-            sleep(1)
+            sleep(0.1)
             self.pi.write(self.ptt_gpio,0)
-            sleep(1)
+            sleep(0.1)
             self.pi.write(self.tw_gpio,0)
             mixer.quit()
             self.logger.success("Lecture terminée")

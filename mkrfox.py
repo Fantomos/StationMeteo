@@ -93,7 +93,7 @@ class Mkrfox:
             data.append(humidite)
 
             #Température
-            #On passe la température de l'intervalle [-50; 205] à l'intervalle entier [0 ; 255] qu'on envoie en un octet
+            #On envoie la température en un int signé [-127 ; 127]
             data.append(temperature.to_bytes(1, 'big', signed=True)[0])
 
             #Pression
