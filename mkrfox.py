@@ -120,5 +120,5 @@ class Mkrfox:
         except:
             self.logger.error("Impossible d'envoyer des données au réseau Sigfox")
         else:
-            self.logger.success("Envoie reussi au réseau Sigfox")
+            self.logger.success("Envoie réussi au réseau Sigfox")
         

@@ -65,7 +65,13 @@ mkrfox = Mkrfox(pi = pi, i2c_address = MKRFOX_ADDR, logger = logger_log, nb_try=
 attiny = Attiny(pi = pi, i2c_address = ATTINY_ADDR, logger = logger_log, nb_try=MESURES_TRY)
 sensors = Sensors(dht11_gpio = GPIO_DHT11, config = config, logger = logger_log, logger_data=logger_data, mesures_nbtry=MESURES_TRY, nbmesures=NB_MESURES)
 radio = Radio(config = config, logger = logger_log, pi = pi, speed = TTS_SPEED, pitch = TTS_PITCH, tw_gpio = GPIO_TW, ptt_gpio = GPIO_PTT)
-gsm = Gsm(gsm_power_gpio=GPIO_GSM_POWER, config = config, logger = logger_log, mesures_nbtry=MESURES_TRY)
+gsm = Gsm(config = config, pi = pi, logger = logger_log, mesures_nbtry=MESURES_TRY)
+
+
+# a = time.time()
+# print(gsm.readAllSMS())
+# print(time.time()-a)
+
 
 state = mkrfox.read("state")
 mkrfox.write("state",state | 0b00000001)
@@ -137,20 +143,26 @@ else:
 sensorsData["Battery"] = battery
 logger_battery.info(sensorsData['Battery'])
 
-# Joue le message audio sur la radio
-Thread(target = Radio.playVoiceMessage, args=(radio,sensorsData)).start()
-# radio.playVoiceMessage(sensorsData)
+# # Joue le message audio sur la radio
+# thread_radio = Thread(target = Radio.playVoiceMessage, args=(radio,sensorsData))
+# thread_radio.start()
 
-# Envoie les données au MKRFOX pour transmision via SigFox
-mkrfox.sendData(sensorsData)
+
+# # Envoie les données au MKRFOX pour transmision via SigFox
+# thread_mkrfox = Thread(target = Mkrfox.sendData, args=(mkrfox,sensorsData))
+# thread_mkrfox.start()
 
 # Envoie les données via SMS
-gsm.respondToSMS(sensorsData)
+thread_gsm = Thread(target = Gsm.respondToSMS, args=(gsm,sensorsData))
+thread_gsm.start()
 
 # Met à jour la configuration sur le MKRFOX
+thread_gsm.join()
+# thread_mkrfox.join()
 configData = {"sleep":config.getSleepHour(),"wakeup":config.getWakeupHour(),"battery_threshold":config.getBatteryLimit()}
 mkrfox.updateConfig(configData)
 
+# thread_radio.join()
 
 # On signale au mkrfox que le cycle est terminé
 mkrfox.write("state", 0) 
@@ -160,6 +172,6 @@ logger_log.info("########################### FIN CYCLE #########################
 logger_log.info("#################################################################")
 logger_log.info("\n\n")
 
-#On nettoie les entrées/sorties
+# # #On nettoie les entrées/sorties
 pi.stop()
 

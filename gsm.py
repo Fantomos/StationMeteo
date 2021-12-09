@@ -5,31 +5,34 @@
 
 import serial
 import RPi.GPIO as GPIO
-from time import sleep, mktime
+from time import sleep, mktime, time
 
 ## Classe Gsm.
 # Cette classe permet la communication et la gestion du module GSM SIM800L via UART.
 class Gsm:
     ## Constructeur.
     # @param config Objet ConfigFile.
+    # @param pi Instance de pigpio.
     # @param logger Logger principal.
     # @param mesures_nbtry Nombres d'essais maximum de l'initialisation des capteurs. La valeur par défaut est 5.
     # @param baudrate Baudrate du bus UART. La valeur par défaut est 115200.
     # @param timeout Timeout du bus UART. La valeur par défaut est 1.
-    def __init__(self, config, logger, mesures_nbtry = 5, baudrate = 115200, timeout = 1):
+    def __init__(self, config, pi, logger, mesures_nbtry = 5, baudrate = 115200, timeout = 1):
         ## Logger principal
         self.logger = logger
+        ## Instance de pigpio
+        self.pi = pi
         ## Objet ConfigFile.
         self.config = config
         self.logger.info("Tentative d'ouverture du port série pour le module GSM...")
         for i in range(mesures_nbtry):
             try:
                 ## Référence du bus UART.
-                self.bus = serial.Serial("/dev/ttyAMA0", baudrate, timeout = timeout)
+                self.handle = pi.serial_open("/dev/ttyAMA0", baudrate)
             except Exception as e:
                 self.logger.error(e)
                 self.logger.error("Impossible d'ouvrir le port série ou de configurer le module GSM.")
-                self.bus = None
+                self.handle = None
             else: #Si ça marche on sort de la boucle
                 self.logger.success("Port série ouvert")
                 break
@@ -39,27 +42,29 @@ class Gsm:
 
     ## Lit les données sur le bus série.
     # @return Retourne les données.
-    def readBuffer(self):
+    def readBuffer(self, wait = 0.1):
         try:
-            buffer = self.bus.read(1000).decode("8859")
-            output = buffer
-            while (len(buffer) > 0):
-                sleep(0.01)
-                buffer = self.bus.read(1000).decode("8859")
-                output += buffer
-            return output.strip()
+            sleep(wait)
+            rdy = self.pi.serial_data_available(self.handle)
+            start = time()
+            while rdy == 0:
+                if time() - start > 3:
+                    raise Exception("Timeout : Aucune réponse")
+                rdy = self.pi.serial_data_available(self.handle)
+                sleep(0.001)
+            (b, d) = self.pi.serial_read(self.handle, rdy)
+            return d.decode("8859")
         except Exception as e:
             self.logger.error(e)
             self.logger.error("Erreur lors de la lecture du buffer.")
-            return ""
+            return "Erreur"
 
     ## Envoie une commande AT sans avoir besoin d'écrire "AT" .
     # @return Retourne la réponse à la commande.
-    def sendAT(self, command):
+    def sendAT(self, command, wait = 0.1):
         try:
-            self.readBuffer()  #On vide le buffer avant
-            self.bus.write(("AT" + command + "\r\n").encode("8859")) #On écrit la commande
-            return self.readBuffer() #On renvoie la réponse
+            self.pi.serial_write(self.handle,("AT" + command + "\r").encode("8859")) #On écrit la commande
+            return self.readBuffer(wait) #On renvoie la réponse
         except Exception as e:
             self.logger.error(e)
             self.logger.error("Erreur lors de l'envoi de la commande " + str(command) + ".")
@@ -84,10 +89,11 @@ class Gsm:
     # @return Retourne la réponse aux commandes.
     def setup(self):
         self.logger.info("Configuration du module GSM...")
-        output = self.sendAT("+CLTS=1") + "\n" # Active la synchronisation de l'heure par le réseaux
-        output += self.sendAT("+CMGF=1") + "\n" # Met en mode texte
-        output += self.sendAT("+CSCS=\"GSM\"") + "\n" # Indique un encodage GSM
-        output += self.sendAT("+CPMS=\"SM\",\"SM\",\"SM\"") + "\n" # Indique que le stockage se fait dans la carte SIM
+        output = self.sendAT("E0")
+        output += self.sendAT("+CLTS=1") # Active la synchronisation de l'heure par le réseaux
+        output += self.sendAT("+CMGF=1") # Met en mode texte
+        output += self.sendAT("+CSCS=\"GSM\"")# Indique un encodage GSM
+        output += self.sendAT("+CPMS=\"SM\",\"SM\",\"SM\"") # Indique que le stockage se fait dans la carte SIM
         output += self.sendAT("&W") # Sauvegarde la configuration sur la ROM du module
         self.logger.success("Module GSM configuré")
         return output
@@ -97,9 +103,9 @@ class Gsm:
     # @param txt Le message à envoyer.
     # @return Retourne la réponse aux commandes.
     def sendSMS(self, numero, txt):
-        output = self.sendAT("+CMGS=\"" + numero + "\"\r" + txt) + "\n" #On envoie le numéro
-        self.bus.write(bytes([26]))
-        self.readBuffer() #On vide le buffer
+        output = self.sendAT("+CMGS=\"" + numero + "\"\r") #On envoie le numéro
+        self.pi.serial_write(self.handle, (txt + chr(26)).encode("8859"))
+        output += self.readBuffer()
         return output
 
     ## Renvoie la date sous la forme d'un tableau [année, mois, jour, heure, minute, seconde].
@@ -107,45 +113,34 @@ class Gsm:
     def getDateTime(self):
         self.logger.info("Tentative d'actualiser l'heure depuis le module GSM...")
         buffer = self.sendAT("+CCLK?") #On récupère la date et heure du module GSM
-        if len(buffer) > 17: #Si on a bien tout reçu, on le renvoie, sinon on renvoie un tableau vide
+        try:
+            print(buffer)
             datetime = buffer.split("\"")[1]
             date = datetime.split(",")[0].split("/")
             clock = datetime.split(",")[1].split("+")[0].split(":")
             date[0] = "20" + date[0]
             return round(mktime((int(date[0]), int(date[1]), int(date[2]), int(clock[0]), int(clock[1]), int(clock[2]), 0, 0, -1)))
-        else:
+        except Exception as e:
+            self.logger.error(e)
             self.logger.error("Impossible d'obtenir la date et heure depuis le module GSM")
             return 0
         
-    ## Renvoie les indices des SMS enregistrés (nombre entre 1 et 50)
-    # @return Retourne la listes des indices des SMS enregistrés.
-    def getSMSIndexes(self):
-        buffer = self.sendAT("+CMGL=\"ALL\"").split("\r\n")
-        indexes = []
-        for data in buffer:
-            if data.startswith("+CMGL"):
-                try:
-                    index = data[7:].split(",")[0]
-                    if not index in indexes:
-                        indexes.append(index)
-                except Exception as E:
-                    self.logger.error(E)
-                    self.logger.error("Erreur dans la récupération des index")
-        return indexes
-
     ## Lit un SMS à partir de l'indice donné et renvoie le texte du message et le numéro de l'expéditeur.
     # @param index L'indice du SMS à lire.
     # @return Retourne le message et le numéro de téléphone de l'expéditeur ou un tableau vide en cas d'erreur lors de la lecture.
-    def readSMS(self, index):
-        self.readBuffer()
-        buffer = self.sendAT("+CMGR=" + str(index)) # On demande la lecture du SMS
+    def readAllSMS(self):
+        buffer = self.sendAT("+CMGL=\"ALL\"",1) # On demande la lecture de tous les SMS
         try:
-            number = buffer.split(",")[1].strip("\"") # On parse la réponse
-            text = buffer.split("\r\n")[2]
-            return [text, number]
+            buffer = buffer.split("\r\n\r\n")[:-1]
+            list_sms = []
+            for sms in buffer:
+                number = sms.split(",")[2].strip("\"") # On parse la réponse
+                text = list(filter(None,sms.split("\r\n")))[1]
+                list_sms.append((number,text))
+            return list_sms
         except Exception as E:
             self.logger.error(E)
-            self.logger.error("Erreur lors de la lecture du SMS d'indice " + str(index))
+            self.logger.error("Erreur lors de la lecture des SMS")
             return []
 
     ## Supprime un SMS à partir de son indice.
@@ -157,7 +152,6 @@ class Gsm:
     ## Supprime tous les SMS.
     # @return Retourne la réponse à la commande.
     def deleteAllSMS(self):
-        self.readBuffer()
         return self.sendAT("+CMGD=1,4")
 
     ## Renvoie le status d'un SMS.
@@ -304,61 +298,60 @@ class Gsm:
     def respondToSMS(self, sensorsData):
         config_set = False
         self.logger.info("Analyse des SMS reçus...")
-        indexes = self.getSMSIndexes() #On récupère la liste des indices des SMS
-        self.logger.success(str(len(indexes)) + " SMS reçus")
-        if len(indexes) > 0: #Si on a bien reçu des SMS
-            for index in indexes[:20]: #On les parcourt
-                self.logger.info("Traitement du SMS numéro " + str(index) + "...")
-                try:
-                    sms = self.readSMS(index) #On lit le sms (format [message, numéro])
-                    self.logger.info("Lecture du SMS : " + str(sms[1]) + " | Message : " + str(sms[0]))
-                    status = self.getStatus(sms[0]) #On récupère le status (commande, mot de passe, infos)
-                    if status == 1: #S'il s'agit d'une commande d'écriture
-                        if (sms[1] == self.config.getGsmMaster()): #Si le numéro est le bon, on l'autorise
-                            self.sendSMS(sms[1], self.executeSetCommand(sms[0])) #On exécute la commande et on réponds le message de confirmation ou d'erreur
-                            config_set = True
-                        else: #Sinon, on répond que ce n'est pas possible
-                            self.logger.info("Permission refusée : ce numéro n'est pas le maître de la station")
-                            self.sendSMS(sms[1], "Vous n'avez pas la permission d'effectuer cette commande.")
-                    elif status == 2: #S'il s'agit d'une commande de lecture, on renvoie la réponse adaptée
-                        self.sendSMS(sms[1], self.executeGetCommand(sms[0], sensorsData))
-                    elif status == 3: #S'il s'agit du mot de passe
-                        self.sendSMS(sms[1], "Vous etes désormais le nouveau responsable de la station.")
-                        self.config.setGsmMaster(str(sms[1]))
+        list_sms = self.readAllSMS() #On récupère la liste des indices des SMS
+        self.logger.success(str(len(list_sms)) + " SMS reçus")
+        i = 0
+        for sms in list_sms: #On les parcourt
+            i = i + 1
+            self.logger.info("Traitement du SMS numéro " + str(i) + "...")
+            try:
+                self.logger.info("Lecture du SMS : " + str(sms[0]) + " | Message : " + str(sms[1]))
+                status = self.getStatus(sms[1]) #On récupère le status (commande, mot de passe, infos)
+                if status == 1: #S'il s'agit d'une commande d'écriture
+                    if (sms[0] == self.config.getGsmMaster()): #Si le numéro est le bon, on l'autorise
+                        self.sendSMS(sms[1], self.executeSetCommand(sms[1])) #On exécute la commande et on réponds le message de confirmation ou d'erreur
                         config_set = True
-                        self.logger.info("Nouveau maître de la station : " + str(sms[1]))
-                    elif status == 0: #Si ce n'est pas une des 3 possibilités, on renvoie le sms contenant les infos
-                        self.sendSMS(sms[1], self.createSMS(sensorsData))
-                        self.logger.info("Envoie du bulletin météo")
-                except Exception as e:
-                    self.logger.error(e)
-                    self.logger.error("Impossible de traiter le SMS numéro "+ str(index))
-                else :
-                    self.logger.success("Traitement du SMS numéro " + str(index) + " terminé")
-                sleep(5)
-           
-            if config_set :
-                try:
-                    self.config.saveChange()
-                except Exception as e:
-                    self.logger.error(e)
-                    self.logger.error("Impossible d'écrire sur le fichier de configuration")
-                else:
-                    self.logger.success("Fichier de configuration mis à jour")
-
-               
-
-            try:  #On supprime tous les SMS
-                self.deleteAllSMS()
+                    else: #Sinon, on répond que ce n'est pas possible
+                        self.logger.info("Permission refusée : ce numéro n'est pas le maître de la station")
+                        self.sendSMS(sms[0], "Vous n'avez pas la permission d'effectuer cette commande.")
+                elif status == 2: #S'il s'agit d'une commande de lecture, on renvoie la réponse adaptée
+                    self.sendSMS(sms[0], self.executeGetCommand(sms[1], sensorsData))
+                elif status == 3: #S'il s'agit du mot de passe
+                    self.sendSMS(sms[0], "Vous etes désormais le nouveau responsable de la station.")
+                    self.config.setGsmMaster(str(sms[0]))
+                    config_set = True
+                    self.logger.info("Nouveau maître de la station : " + str(sms[0]))
+                elif status == 0: #Si ce n'est pas une des 3 possibilités, on renvoie le sms contenant les infos
+                    self.sendSMS(sms[0], self.createSMS(sensorsData))
+                    self.logger.info("Envoie du bulletin météo")
             except Exception as e:
                 self.logger.error(e)
-                self.logger.error("Erreur lors de la suppression des SMS")
-            else:
-                self.logger.success("Suppression des SMS terminée")
+                self.logger.error("Impossible de traiter le SMS numéro "+ str(i))
+            else :
+                self.logger.success("Traitement du SMS numéro " + str(i) + " terminé")
         
+        if config_set :
+            try:
+                self.config.saveChange()
+            except Exception as e:
+                self.logger.error(e)
+                self.logger.error("Impossible d'écrire sur le fichier de configuration")
+            else:
+                self.logger.success("Fichier de configuration mis à jour")
+
+            
+
+        try:  #On supprime tous les SMS
+            self.deleteAllSMS()
+        except Exception as e:
+            self.logger.error(e)
+            self.logger.error("Erreur lors de la suppression des SMS")
+        else:
+            self.logger.success("Suppression des SMS terminée")
+    
         #On mesure la tension de la batterie, et s'il elle sous le seuil d'alerte, on envoie un message
         battery = sensorsData['Battery']
-        if battery <= int(self.config.getBatteryLimit())-200:
+        if battery <= int(self.config.getBatteryLimit())-200 and battery != 0:
             self.sendSMS(self.config.getGsmMaster(), "[" +  sensorsData['Time'] + "]\n/!\\ La tension de la batterie (" + str(battery) + " mV) est proche du seuil (" + str(self.config.getBatteryLimit()) + " mV) , la station risque de ne plus fonctionner correctement. /!\\")
 
 
