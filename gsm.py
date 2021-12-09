@@ -69,21 +69,6 @@ class Gsm:
             self.logger.error(e)
             self.logger.error("Erreur lors de l'envoi de la commande " + str(command) + ".")
             return "error"
-    
-
-    ## Allume le module GSM (power + commande vide) et renvoie le résultat d'une commande vide.
-    # @return Retourne OK ou not OK si le module ne réponds pas.
-    def sleepOn(self):
-        if self.sendAT("") != "OK":
-            self.power()
-            return "OK"
-        else:
-            return "not OK"
-
-    ## Eteint la station
-    def sleepOff(self):
-        if self.sendAT("") == "OK":
-            self.power()
 
     ## Initialise le module pour se connecter au réseau et envoyer des SMS
     # @return Retourne la réponse aux commandes.
@@ -309,7 +294,7 @@ class Gsm:
                 status = self.getStatus(sms[1]) #On récupère le status (commande, mot de passe, infos)
                 if status == 1: #S'il s'agit d'une commande d'écriture
                     if (sms[0] == self.config.getGsmMaster()): #Si le numéro est le bon, on l'autorise
-                        self.sendSMS(sms[1], self.executeSetCommand(sms[1])) #On exécute la commande et on réponds le message de confirmation ou d'erreur
+                        self.sendSMS(sms[0], self.executeSetCommand(sms[1])) #On exécute la commande et on réponds le message de confirmation ou d'erreur
                         config_set = True
                     else: #Sinon, on répond que ce n'est pas possible
                         self.logger.info("Permission refusée : ce numéro n'est pas le maître de la station")
