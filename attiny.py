@@ -3,7 +3,6 @@
 # Définition de la classe attiny. Elle permet la communication avec l'ATTINY et la lecture des données du vent (vitesse et direction).
 ##
 
-from time import sleep
 from i2c import I2C
 ## Classe Attiny.
 # Cette classe permet la communication avec le microcontrolleur ATTINY.
@@ -31,12 +30,22 @@ class Attiny:
         self.logger.info("Récupération des données de vent à l'ATTINY")
         return self.i2c_bus.readAll(length)
     
-    ## Obtiens les données du vent à partir de l'ATTINY
+    ## Obtiens les données du vent à partir de l'ATTINY et on les étalonne
     # @return Les données du vent
     def getWindData(self):
+        speed_factor = 159525
         wind_array = self.read(8)
-        direction = int.from_bytes(wind_array[:2], byteorder='big', signed=False)/100
-        speed = int.from_bytes(wind_array[2:4], byteorder='big', signed=False)
-        direction_max = int.from_bytes(wind_array[4:6], byteorder='big', signed=False)/100
+        direction = ((int.from_bytes(wind_array[:2], byteorder='big', signed=False)/100)+150)%360
+        speed = (int.from_bytes(wind_array[2:4], byteorder='big', signed=False))
+        if speed == 0xFFFF or speed == 0:
+            speed = 0
+        else:
+            speed = speed_factor/speed 
+        direction_max = ((int.from_bytes(wind_array[4:6], byteorder='big', signed=False)/100)+150)%360
         speed_max = int.from_bytes(wind_array[6:8], byteorder='big', signed=False)
+        if speed_max == 0xFFFF or speed == 0:
+            speed_max = 0
+        else:
+            speed_max = speed_factor/speed_max 
+
         return {"Direction": direction, "Speed":speed, "Direction_max":direction_max, "Speed_max":speed_max}

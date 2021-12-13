@@ -39,7 +39,7 @@ class ConfigFile:
     ## Modifie la tension de la batterie limite.
     # @param limit La nouvelle tension limite.
     def setBatteryLimit(self, limit):
-        self.subconfig['seuil_alerte'] = limit
+        self.subconfig['seuil_alerte'] = str(int(limit))
 
     ## Modifie le mot de passe maître de la station.
     # @param pswd Le nouveau mot de passe maître.
@@ -54,12 +54,12 @@ class ConfigFile:
     ## Modifie l'heure de réveil de la station.
     # @param hour La nouvelle heure de réveil.
     def setWakeupHour(self, hour):
-        self.subconfig['wakeup'] = hour
+        self.subconfig['wakeup'] = str(int(hour))
     
     ## Modifie l'heure d'extinction de la station.
     # @param hour La nouvelle heure d'extinction.
     def setSleepHour(self, hour):
-        self.subconfig['sleep'] = round(hour)
+        self.subconfig['sleep'] = str(int(hour))
 
     ## Modifie le nom de la station.
     # @param name La nouveau nom de la station.
@@ -69,7 +69,7 @@ class ConfigFile:
     ## Modifie l'altitude de la station.
     # @param altitude La nouvelle altitude de la station.
     def setSiteAltitude(self, altitude):
-        self.subconfig['altitude'] = altitude
+        self.subconfig['altitude'] = str(int(altitude))
 
     ## Recupère le code PIN de la carte SIM.
     # @return Retourne le PIN du GSM.

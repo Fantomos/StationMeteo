@@ -1,0 +1,111 @@
+11:14:32 #################################################################
+11:14:32 ###################### DEBUT NOUVEAU CYCLE ######################
+11:14:32 #################################################################
+11:14:32 Tentative de connexion au bus I2C...
+11:14:32 Bus I2C connecté
+11:14:32 Tentative d'ouverture du port série pour le module GSM...
+11:14:32 Bus série avec le GSM ouvert
+11:14:32 Tentative de connexion aux capteurs...
+11:14:32 Hygromètre connecté
+11:14:33 Impossible de se connecter au thermomètre, essai 1/5.
+11:14:35 Impossible de se connecter au thermomètre, essai 2/5.
+11:14:37 Impossible de se connecter au thermomètre, essai 3/5.
+11:14:39 Impossible de se connecter au thermomètre, essai 4/5.
+11:14:41 Impossible de se connecter au thermomètre, essai 5/5.
+11:14:42 Impossible de se connecter au baromètre, essai 1/5.
+11:14:43 Impossible de se connecter au baromètre, essai 2/5.
+11:14:44 Impossible de se connecter au baromètre, essai 3/5.
+11:14:45 Impossible de se connecter au baromètre, essai 4/5.
+11:14:46 Impossible de se connecter au baromètre, essai 5/5.
+11:14:47 Impossible d'envoyer les données sur le registre 0, données=1635498793)
+11:17:58 #################################################################
+11:17:58 ###################### DEBUT NOUVEAU CYCLE ######################
+11:17:58 #################################################################
+11:17:58 Tentative de connexion au bus I2C...
+11:17:58 Bus I2C connecté
+11:17:58 Tentative d'ouverture du port série pour le module GSM...
+11:17:58 Bus série avec le GSM ouvert
+11:17:58 Tentative de connexion aux capteurs...
+11:17:58 Hygromètre connecté
+11:17:59 Impossible de se connecter au thermomètre, essai 1/5.
+11:18:01 Impossible de se connecter au thermomètre, essai 2/5.
+11:18:03 Impossible de se connecter au thermomètre, essai 3/5.
+11:18:05 Impossible de se connecter au thermomètre, essai 4/5.
+11:18:07 Impossible de se connecter au thermomètre, essai 5/5.
+11:18:08 Impossible de se connecter au baromètre, essai 1/5.
+11:18:10 Impossible de se connecter au baromètre, essai 2/5.
+11:18:11 Impossible de se connecter au baromètre, essai 3/5.
+11:18:12 Impossible de se connecter au baromètre, essai 4/5.
+11:18:13 Impossible de se connecter au baromètre, essai 5/5.
+11:18:14 Impossible d'envoyer les données sur le registre 0, données=1635498793)
+13:31:25 Tentative de connexion au bus I2C...
+13:31:25 Bus I2C connecté
+13:31:25 Donnée transmise sur le registre0, données=1635505843)
+13:33:40 Tentative de connexion au bus I2C...
+13:33:41 Bus I2C connecté
+13:33:41 Donnée transmise sur le registre0, données=1635505843)
+13:33:41 Donnée reçu sur le registre0
+13:35:20 Tentative de connexion au bus I2C...
+13:35:20 Bus I2C connecté
+13:35:20 Donnée transmise sur le registre0, données=1635505843)
+13:35:20 Donnée reçu sur le registre0
+13:36:00 Tentative de connexion au bus I2C...
+13:36:00 Bus I2C connecté
+13:36:00 Donnée transmise sur le registre 0, données=1635505843)
+13:36:00 Donnée [255, 255, 255, 255] reçu sur le registre 0
+13:37:09 Tentative de connexion au bus I2C...
+13:37:09 Bus I2C connecté
+13:37:09 Donnée transmise sur le registre 0, données=1635505843)
+13:37:09 Donnée [255, 255, 255, 255] reçu sur le registre 0
+13:49:39 Tentative de connexion au bus I2C...
+13:49:39 Bus I2C connecté
+13:49:39 Impossible d'envoyer les données sur le registre 0, données=1635505843)
+13:49:39 Impossible de lire le registre 0 sur le PIC.
+13:49:56 Tentative de connexion au bus I2C...
+13:49:56 Bus I2C connecté
+13:49:56 Donnée transmise sur le registre 0, données=1635505843)
+13:49:56 Donnée [255, 255, 255, 255] reçu sur le registre 0
+13:50:22 Tentative de connexion au bus I2C...
+13:50:22 Bus I2C connecté
+13:50:22 Donnée transmise sur le registre 0, données=1635505843)
+13:50:22 Donnée [255, 255, 255, 255] reçu sur le registre 0
+13:51:02 Tentative de connexion au bus I2C...
+13:51:02 Bus I2C connecté
+13:51:02 Donnée transmise sur le registre 0, données=1635505843)
+13:51:03 Donnée [255, 255, 255, 255] reçu sur le registre 0
+13:56:14 Tentative de connexion au bus I2C...
+13:56:14 Bus I2C connecté
+13:56:14 Donnée transmise sur le registre 0, données=1635505843)
+13:56:15 Donnée [255, 255, 255, 255] reçu sur le registre 0
+14:06:32 Tentative de connexion au bus I2C...
+14:06:32 Bus I2C connecté
+14:06:32 Donnée transmise sur le registre 0, données=1635505843)
+14:06:33 Donnée [2, 4, 8, 3] reçu sur le registre 0
+14:08:01 Tentative de connexion au bus I2C...
+14:08:01 Bus I2C connecté
+14:08:01 Donnée transmise sur le registre 0, données=1635505843)
+14:08:02 Donnée [180, 255, 255, 255] reçu sur le registre 0
+14:08:22 Tentative de connexion au bus I2C...
+14:08:22 Bus I2C connecté
+14:08:22 Donnée transmise sur le registre 0, données=1635505843)
+14:08:23 Donnée [180, 255, 255, 255] reçu sur le registre 0
+14:13:02 Tentative de connexion au bus I2C...
+14:13:02 Bus I2C connecté
+14:13:02 Donnée transmise sur le registre 0, données=1635505843)
+14:13:03 Donnée [97, 123, 214, 180] reçu sur le registre 0
+14:22:29 Tentative de connexion au bus I2C...
+14:22:29 Bus I2C connecté
+14:22:29 Impossible d'envoyer les données sur le registre 0, données=1635505843)
+14:22:30 Impossible de lire le registre 0 sur le PIC.
+14:22:41 Tentative de connexion au bus I2C...
+14:22:41 Bus I2C connecté
+14:22:41 Donnée transmise sur le registre 0, données=1635505843)
+14:22:42 Donnée [97, 123, 214, 181] reçu sur le registre 0
+14:22:52 Tentative de connexion au bus I2C...
+14:22:52 Bus I2C connecté
+14:22:52 Donnée transmise sur le registre 0, données=1635505843)
+14:22:53 Donnée [97, 123, 214, 180] reçu sur le registre 0
+14:23:02 Tentative de connexion au bus I2C...
+14:23:02 Bus I2C connecté
+14:23:02 Donnée transmise sur le registre 0, données=1635505843)
+14:23:03 Donnée [97, 123, 214, 180] reçu sur le registre 0

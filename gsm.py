@@ -2,10 +2,8 @@
 ## @file gsm.py
 # Définition de la classe gsm. Elle permet la communication avec le module GSM SIM800L.
 ##
-
-import serial
-import RPi.GPIO as GPIO
 from time import sleep, mktime, time
+from loguru import logger
 
 ## Classe Gsm.
 # Cette classe permet la communication et la gestion du module GSM SIM800L via UART.
@@ -48,7 +46,7 @@ class Gsm:
             rdy = self.pi.serial_data_available(self.handle)
             start = time()
             while rdy == 0:
-                if time() - start > 3:
+                if time() - start > 10:
                     raise Exception("Timeout : Aucune réponse")
                 rdy = self.pi.serial_data_available(self.handle)
                 sleep(0.001)
@@ -83,6 +81,11 @@ class Gsm:
         self.logger.success("Module GSM configuré")
         return output
 
+    ## Configure le module GSM en sommeil profond
+    # @return Retourne la réponse aux commandes.
+    def sleep(self):
+        return self.sendAT("+CSCLK=2")
+
     ## Envoie un SMS au numéro indiqué.
     # @param numero Le numéro de téléphone auquel envoyer un SMS.
     # @param txt Le message à envoyer.
@@ -90,14 +93,14 @@ class Gsm:
     def sendSMS(self, numero, txt):
         output = self.sendAT("+CMGS=\"" + numero + "\"\r") #On envoie le numéro
         self.pi.serial_write(self.handle, (txt + chr(26)).encode("8859"))
-        output += self.readBuffer()
+        output += self.readBuffer(1)
         return output
 
     ## Renvoie la date sous la forme d'un tableau [année, mois, jour, heure, minute, seconde].
     # @return Retourne le timestamp UNIX représentant le temps actuel ou 0 en cas d'erreur lors de l'accés au module.
     def getDateTime(self):
         self.logger.info("Tentative d'actualiser l'heure depuis le module GSM...")
-        buffer = self.sendAT("+CCLK?") #On récupère la date et heure du module GSM
+        buffer = self.sendAT("+CCLK?",0.1) #On récupère la date et heure du module GSM
         try:
             print(buffer)
             datetime = buffer.split("\"")[1]
@@ -114,7 +117,7 @@ class Gsm:
     # @param index L'indice du SMS à lire.
     # @return Retourne le message et le numéro de téléphone de l'expéditeur ou un tableau vide en cas d'erreur lors de la lecture.
     def readAllSMS(self):
-        buffer = self.sendAT("+CMGL=\"ALL\"",1) # On demande la lecture de tous les SMS
+        buffer = self.sendAT("+CMGL=\"ALL\"",2) # On demande la lecture de tous les SMS
         try:
             buffer = buffer.split("\r\n\r\n")[:-1]
             list_sms = []
@@ -182,10 +185,10 @@ class Gsm:
             return "Altitude de la station : " + str(self.config.getSiteAltitude()) + " m"
         elif word == "logs":
             self.logger.info("Envoi des logs")
-            return self.config.getNLogs(command.split("?")[1].strip() if command.split("?")[1].strip().isnumeric() else 1)
+            return self.getLogs()
         elif word == "data":
-            self.logger.info("Envoi des N dernières données")
-            return self.config.getData() #TODO
+            self.logger.info("Envoi des dernières données")
+            return self.getData() #TODO
         elif word == "aide":
             self.logger.info("Envoi de la liste des commandes")
             return "Envoyez n'importe quel message pour obtenir le dernier bulletin météo. \nVotre sms peut aussi contenir l'une des commandes suivantes : batterie?, seuil?, nom?, altitude?, eveil?, extinction?, maitre?"
@@ -211,7 +214,7 @@ class Gsm:
                 elif(int(arg)<0):
                     raise Exception("Heure de réveil inferieur à 0")
                 else:
-                     self.config.setWakeupHour(str(int(arg)))
+                     self.config.setWakeupHour(int(arg))
                     
             except Exception as e:
                 self.logger.error(e)
@@ -228,7 +231,7 @@ class Gsm:
                 elif(int(arg)>23):
                     raise Exception("Heure de réveil inferieur à 0")
                 else:
-                    self.config.setSleepHour(str(int(arg)))
+                    self.config.setSleepHour(int(arg))
             except Exception as e:
                 self.logger.error(e)
                 self.logger.error("Impossible de mettre à jour l'heure d'extinction")
@@ -250,7 +253,7 @@ class Gsm:
 
         elif word == "altitude":
             try:
-                self.config.setSiteAltitude(str(int(arg)))
+                self.config.setSiteAltitude(int(arg))
             except Exception as e:
                 self.logger.error(e)
                 self.logger.error("Impossible de mettre à jour l'altitude")
@@ -290,7 +293,7 @@ class Gsm:
             i = i + 1
             self.logger.info("Traitement du SMS numéro " + str(i) + "...")
             try:
-                self.logger.info("Lecture du SMS : " + str(sms[0]) + " | Message : " + str(sms[1]))
+                self.logger.info("Lecture du SMS : " + str(sms[0]) + " / Message : " + str(sms[1]))
                 status = self.getStatus(sms[1]) #On récupère le status (commande, mot de passe, infos)
                 if status == 1: #S'il s'agit d'une commande d'écriture
                     if (sms[0] == self.config.getGsmMaster()): #Si le numéro est le bon, on l'autorise
@@ -338,6 +341,15 @@ class Gsm:
         battery = sensorsData['Battery']
         if battery <= int(self.config.getBatteryLimit())-200 and battery != 0:
             self.sendSMS(self.config.getGsmMaster(), "[" +  sensorsData['Time'] + "]\n/!\\ La tension de la batterie (" + str(battery) + " mV) est proche du seuil (" + str(self.config.getBatteryLimit()) + " mV) , la station risque de ne plus fonctionner correctement. /!\\")
+
+        self.sleep()
+
+    def getLogs(self):
+        pattern = r"(?P<time>.*) \| (?P<message>.*)"  
+        output = ""
+        for groups in logger.parse("logs/logs.log", pattern)[:50]:
+            output += groups["time"] + " | " + groups["message"] + "\n"
+        return output
 
 
 

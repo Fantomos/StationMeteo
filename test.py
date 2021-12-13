@@ -15,7 +15,7 @@ from threading import Thread
 
 
 MESURES_TRY = 3
-NB_MESURES = 1 # Nom du fichier de configuration
+NB_MESURES = 3
 CONFIG_FILENAME = "config.ini" # Nom du fichier de configuration
 MKRFOX_ADDR = 0x55 # Addresse I2C du MKRFOX
 ATTINY_ADDR = 0x44 # Addresse I2C du ATTINY
@@ -24,7 +24,6 @@ ATTINY_ADDR = 0x44 # Addresse I2C du ATTINY
 TTS_SPEED = 120 # Vitesse de lecture de la synthèse vocale
 TTS_PITCH = 30 # Tonalité de la synthèse vocale
 
-GPIO_GSM_POWER = 1
 GPIO_DHT11 = 23
 GPIO_TW = 5
 GPIO_PTT = 6
@@ -32,9 +31,9 @@ GPIO_PTT = 6
 
 
 # Configuration des loggers (log, data et batterie)
-logger.add("logs/logs.txt", rotation="1 days", retention=30, level="INFO", format="{time:HH:mm:ss} {message}", filter=lambda record: record["extra"]["type"] == "LOG")
-logger.add("logs/data.txt", rotation="1 days", retention=30, level="INFO", format="{time:HH:mm:ss} {message}", filter=lambda record: record["extra"]["type"] == "DATA")
-logger.add("logs/battery.txt", rotation="1 days", retention=30, level="INFO", format="{time:HH:mm:ss} {message}", filter=lambda record: record["extra"]["type"] == "BATTERY")
+logger.add("logs/logs.log", rotation="1 days", retention=30, level="INFO", format="{time:HH:mm:ss} | {message}", filter=lambda record: record["extra"]["type"] == "LOG")
+logger.add("logs/data.log", rotation="1 days", retention=30, level="INFO", format="{time:HH:mm:ss} | {message}", filter=lambda record: record["extra"]["type"] == "DATA")
+logger.add("logs/battery.log", rotation="1 days", retention=30, level="INFO", format="{time:HH:mm:ss} | {message}", filter=lambda record: record["extra"]["type"] == "BATTERY")
 logger_log = logger.bind(type="LOG")
 logger_data = logger.bind(type="DATA")
 logger_battery = logger.bind(type="BATTERY")
@@ -60,15 +59,17 @@ if not pi.connected: # On vérifie que le deamon pigpiod est bien en cours d'ex�
 else:
     logger_log.success("Pigpio initialisé")
 
+
 #Initialisation du bus I2C, PIC, Sensors, GSM, Sigfox et radio
 mkrfox = Mkrfox(pi = pi, i2c_address = MKRFOX_ADDR, logger = logger_log, nb_try=MESURES_TRY)
 attiny = Attiny(pi = pi, i2c_address = ATTINY_ADDR, logger = logger_log, nb_try=MESURES_TRY)
-sensors = Sensors(dht11_gpio = GPIO_DHT11, config = config, logger = logger_log, logger_data=logger_data, mesures_nbtry=MESURES_TRY, nbmesures=NB_MESURES)
+sensors = Sensors(dht11_gpio = GPIO_DHT11, config = config, pi = pi, logger = logger_log, logger_data=logger_data, init_nbtry=MESURES_TRY, nb_mesures=NB_MESURES)
 radio = Radio(config = config, logger = logger_log, pi = pi, speed = TTS_SPEED, pitch = TTS_PITCH, tw_gpio = GPIO_TW, ptt_gpio = GPIO_PTT)
 gsm = Gsm(config = config, pi = pi, logger = logger_log, mesures_nbtry=MESURES_TRY)
 
 
 # a = time.time()
+# print(gsm.sendAT("+CMGL=\"ALL\"",1))
 # print(gsm.readAllSMS())
 # print(time.time()-a)
 
@@ -143,14 +144,14 @@ else:
 sensorsData["Battery"] = battery
 logger_battery.info(sensorsData['Battery'])
 
-# # Joue le message audio sur la radio
-# thread_radio = Thread(target = Radio.playVoiceMessage, args=(radio,sensorsData))
-# thread_radio.start()
+# Joue le message audio sur la radio
+thread_radio = Thread(target = Radio.playVoiceMessage, args=(radio,sensorsData))
+thread_radio.start()
 
 
-# # Envoie les données au MKRFOX pour transmision via SigFox
-# thread_mkrfox = Thread(target = Mkrfox.sendData, args=(mkrfox,sensorsData))
-# thread_mkrfox.start()
+# Envoie les données au MKRFOX pour transmision via SigFox
+thread_mkrfox = Thread(target = Mkrfox.sendData, args=(mkrfox,sensorsData))
+thread_mkrfox.start()
 
 # Envoie les données via SMS
 thread_gsm = Thread(target = Gsm.respondToSMS, args=(gsm,sensorsData))
@@ -158,11 +159,11 @@ thread_gsm.start()
 
 # Met à jour la configuration sur le MKRFOX
 thread_gsm.join()
-# thread_mkrfox.join()
+thread_mkrfox.join()
 configData = {"sleep":config.getSleepHour(),"wakeup":config.getWakeupHour(),"battery_threshold":config.getBatteryLimit()}
 mkrfox.updateConfig(configData)
 
-# thread_radio.join()
+thread_radio.join()
 
 # On signale au mkrfox que le cycle est terminé
 mkrfox.write("state", 0) 
@@ -172,6 +173,9 @@ logger_log.info("########################### FIN CYCLE #########################
 logger_log.info("#################################################################")
 logger_log.info("\n\n")
 
-# # #On nettoie les entrées/sorties
+# On nettoie les entrées/sorties
 pi.stop()
+
+# On éteint le Rpi
+system("sudo shutdown -h now") 
 

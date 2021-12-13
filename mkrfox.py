@@ -57,9 +57,9 @@ class Mkrfox:
             self.write("battery_threshold",data["battery_threshold"])
         except Exception as e:
             self.logger.error(e)
-            self.logger.error("Impossible de mettre à jours les paramètres")
+            self.logger.error("Impossible de mettre à jours les paramètres sue le MKRFOX")
         else:
-            self.logger.success("Paramètres mis à jours")
+            self.logger.success("Paramètres mis à jours sur le MKRFOX")
 
     ## Formate les données des capteurs sous forme d'un tableau d'octet.
     # @param sensorsData Les données des capteurs.

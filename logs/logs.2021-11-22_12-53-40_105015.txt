@@ -1,0 +1,419 @@
+12:53:40 #################################################################
+12:53:40 ###################### DEBUT NOUVEAU CYCLE ######################
+12:53:40 #################################################################
+12:53:40 Pigpio initialisé
+12:53:40 Tentative de connexion au bus I2C...
+12:53:40 Bus I2C connecté
+12:53:40 Tentative de connexion au bus I2C...
+12:53:40 Bus I2C connecté
+12:53:40 Tentative de connexion aux capteurs...
+12:53:40 Hygromètre connecté
+12:53:41 No Unknown temperature sensor with id '' found
+12:53:41 Impossible de se connecter au thermomètre, essai 1/1.
+12:53:42 Baromètre connecté
+12:53:42 Début des mesures : 1/1
+12:53:42 'NoneType' object has no attribute 'get_temperature'
+12:53:42 Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.
+12:53:43 Lecture du message audio...
+12:54:07 Lecture terminée
+12:54:07 #################################################################
+12:54:07 ########################### FIN CYCLE ###########################
+12:54:07 #################################################################
+12:54:25 #################################################################
+12:54:25 ###################### DEBUT NOUVEAU CYCLE ######################
+12:54:25 #################################################################
+12:54:25 Pigpio initialisé
+12:54:25 Tentative de connexion au bus I2C...
+12:54:25 Bus I2C connecté
+12:54:25 Tentative de connexion au bus I2C...
+12:54:25 Bus I2C connecté
+12:54:25 Tentative de connexion aux capteurs...
+12:54:25 Hygromètre connecté
+12:54:26 No Unknown temperature sensor with id '' found
+12:54:26 Impossible de se connecter au thermomètre, essai 1/1.
+12:54:27 Baromètre connecté
+12:54:28 Début des mesures : 1/1
+12:54:28 'NoneType' object has no attribute 'get_temperature'
+12:54:28 Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.
+12:54:31 Lecture du message audio...
+12:54:54 Lecture terminée
+12:54:54 #################################################################
+12:54:54 ########################### FIN CYCLE ###########################
+12:54:54 #################################################################
+12:55:04 #################################################################
+12:55:04 ###################### DEBUT NOUVEAU CYCLE ######################
+12:55:04 #################################################################
+12:55:04 Pigpio initialisé
+12:55:04 Tentative de connexion au bus I2C...
+12:55:04 Bus I2C connecté
+12:55:04 Tentative de connexion au bus I2C...
+12:55:04 Bus I2C connecté
+12:55:04 Tentative de connexion aux capteurs...
+12:55:04 Hygromètre connecté
+12:55:05 No Unknown temperature sensor with id '' found
+12:55:05 Impossible de se connecter au thermomètre, essai 1/1.
+12:55:06 Baromètre connecté
+12:55:07 Début des mesures : 1/1
+12:55:07 'NoneType' object has no attribute 'get_temperature'
+12:55:07 Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.
+12:55:07 Lecture du message audio...
+12:55:31 Lecture terminée
+12:55:31 #################################################################
+12:55:31 ########################### FIN CYCLE ###########################
+12:55:31 #################################################################
+12:55:56 #################################################################
+12:55:56 ###################### DEBUT NOUVEAU CYCLE ######################
+12:55:56 #################################################################
+12:55:56 Pigpio initialisé
+12:55:56 Tentative de connexion au bus I2C...
+12:55:56 Bus I2C connecté
+12:55:56 Tentative de connexion au bus I2C...
+12:55:56 Bus I2C connecté
+12:55:56 Tentative de connexion aux capteurs...
+12:55:56 Hygromètre connecté
+12:55:57 No Unknown temperature sensor with id '' found
+12:55:57 Impossible de se connecter au thermomètre, essai 1/1.
+12:55:58 Baromètre connecté
+12:55:59 Début des mesures : 1/1
+12:55:59 'NoneType' object has no attribute 'get_temperature'
+12:55:59 Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.
+12:55:59 Lecture du message audio...
+12:56:23 Lecture terminée
+12:56:23 #################################################################
+12:56:23 ########################### FIN CYCLE ###########################
+12:56:23 #################################################################
+12:56:38 #################################################################
+12:56:38 ###################### DEBUT NOUVEAU CYCLE ######################
+12:56:38 #################################################################
+12:56:38 Pigpio initialisé
+12:56:38 Tentative de connexion au bus I2C...
+12:56:38 Bus I2C connecté
+12:56:38 Tentative de connexion au bus I2C...
+12:56:38 Bus I2C connecté
+12:56:38 Tentative de connexion aux capteurs...
+12:56:38 Hygromètre connecté
+12:56:39 No Unknown temperature sensor with id '' found
+12:56:39 Impossible de se connecter au thermomètre, essai 1/1.
+12:56:41 Baromètre connecté
+12:56:41 Début des mesures : 1/1
+12:56:41 'NoneType' object has no attribute 'get_temperature'
+12:56:41 Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.
+12:56:42 Lecture du message audio...
+12:57:05 Lecture terminée
+12:57:05 #################################################################
+12:57:05 ########################### FIN CYCLE ###########################
+12:57:05 #################################################################
+12:57:32 #################################################################
+12:57:32 ###################### DEBUT NOUVEAU CYCLE ######################
+12:57:32 #################################################################
+12:57:32 Pigpio initialisé
+12:57:33 Tentative de connexion au bus I2C...
+12:57:33 Bus I2C connecté
+12:57:33 Tentative de connexion au bus I2C...
+12:57:33 Bus I2C connecté
+12:57:33 Tentative de connexion aux capteurs...
+12:57:33 Hygromètre connecté
+12:57:34 No Unknown temperature sensor with id '' found
+12:57:34 Impossible de se connecter au thermomètre, essai 1/1.
+12:57:35 Baromètre connecté
+12:57:35 Début des mesures : 1/1
+12:57:35 'NoneType' object has no attribute 'get_temperature'
+12:57:35 Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.
+12:57:41 Lecture du message audio...
+12:58:04 Lecture terminée
+12:58:04 #################################################################
+12:58:04 ########################### FIN CYCLE ###########################
+12:58:04 #################################################################
+12:59:48 #################################################################
+12:59:48 ###################### DEBUT NOUVEAU CYCLE ######################
+12:59:48 #################################################################
+12:59:48 Pigpio initialisé
+12:59:48 Tentative de connexion au bus I2C...
+12:59:48 Bus I2C connecté
+12:59:48 Tentative de connexion au bus I2C...
+12:59:48 Bus I2C connecté
+12:59:48 Tentative de connexion aux capteurs...
+12:59:48 Hygromètre connecté
+12:59:49 No Unknown temperature sensor with id '' found
+12:59:49 Impossible de se connecter au thermomètre, essai 1/1.
+12:59:50 Baromètre connecté
+12:59:50 Début des mesures : 1/1
+12:59:50 'NoneType' object has no attribute 'get_temperature'
+12:59:50 Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.
+12:59:53 Lecture du message audio...
+13:00:17 Lecture terminée
+13:00:17 #################################################################
+13:00:17 ########################### FIN CYCLE ###########################
+13:00:17 #################################################################
+13:02:02 #################################################################
+13:02:02 ###################### DEBUT NOUVEAU CYCLE ######################
+13:02:02 #################################################################
+13:02:02 Pigpio initialisé
+13:02:02 Tentative de connexion au bus I2C...
+13:02:02 Bus I2C connecté
+13:02:02 Tentative de connexion au bus I2C...
+13:02:02 Bus I2C connecté
+13:02:02 Tentative de connexion aux capteurs...
+13:02:02 Hygromètre connecté
+13:02:03 No Unknown temperature sensor with id '' found
+13:02:03 Impossible de se connecter au thermomètre, essai 1/1.
+13:02:04 Baromètre connecté
+13:02:04 Début des mesures : 1/1
+13:02:04 'NoneType' object has no attribute 'get_temperature'
+13:02:04 Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.
+13:02:05 Lecture du message audio...
+13:02:28 Lecture terminée
+13:02:28 #################################################################
+13:02:28 ########################### FIN CYCLE ###########################
+13:02:28 #################################################################
+13:02:51 #################################################################
+13:02:51 ###################### DEBUT NOUVEAU CYCLE ######################
+13:02:51 #################################################################
+13:02:51 Pigpio initialisé
+13:02:51 Tentative de connexion au bus I2C...
+13:02:51 Bus I2C connecté
+13:02:51 Tentative de connexion au bus I2C...
+13:02:51 Bus I2C connecté
+13:02:51 Tentative de connexion aux capteurs...
+13:02:51 Hygromètre connecté
+13:02:52 No Unknown temperature sensor with id '' found
+13:02:52 Impossible de se connecter au thermomètre, essai 1/1.
+13:02:54 Baromètre connecté
+13:02:54 Début des mesures : 1/1
+13:02:54 'NoneType' object has no attribute 'get_temperature'
+13:02:54 Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.
+13:02:54 Lecture du message audio...
+13:03:18 Lecture terminée
+13:03:18 #################################################################
+13:03:18 ########################### FIN CYCLE ###########################
+13:03:18 #################################################################
+13:05:33 #################################################################
+13:05:33 ###################### DEBUT NOUVEAU CYCLE ######################
+13:05:33 #################################################################
+13:05:34 Pigpio initialisé
+13:05:34 Tentative de connexion au bus I2C...
+13:05:34 Bus I2C connecté
+13:05:34 Tentative de connexion au bus I2C...
+13:05:34 Bus I2C connecté
+13:05:34 Tentative de connexion aux capteurs...
+13:05:34 Hygromètre connecté
+13:05:35 No Unknown temperature sensor with id '' found
+13:05:35 Impossible de se connecter au thermomètre, essai 1/1.
+13:05:36 Baromètre connecté
+13:05:36 Début des mesures : 1/1
+13:05:36 'NoneType' object has no attribute 'get_temperature'
+13:05:36 Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.
+13:05:37 Lecture du message audio...
+13:06:01 Lecture terminée
+13:06:01 #################################################################
+13:06:01 ########################### FIN CYCLE ###########################
+13:06:01 #################################################################
+13:06:26 #################################################################
+13:06:26 ###################### DEBUT NOUVEAU CYCLE ######################
+13:06:26 #################################################################
+13:06:26 Pigpio initialisé
+13:06:26 Tentative de connexion au bus I2C...
+13:06:26 Bus I2C connecté
+13:06:26 Tentative de connexion au bus I2C...
+13:06:26 Bus I2C connecté
+13:06:26 Tentative de connexion aux capteurs...
+13:06:26 Hygromètre connecté
+13:06:27 No Unknown temperature sensor with id '' found
+13:06:27 Impossible de se connecter au thermomètre, essai 1/1.
+13:06:28 Baromètre connecté
+13:06:28 Impossible de charger la synthèse vocale ou le codec audio
+13:06:28 Début des mesures : 1/1
+13:06:28 'NoneType' object has no attribute 'get_temperature'
+13:06:28 Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.
+13:06:28 Lecture du message audio...
+13:06:28 Impossible de jouer le message audio car les modules ne sont pas initialisés.
+13:06:29 #################################################################
+13:06:29 ########################### FIN CYCLE ###########################
+13:06:29 #################################################################
+13:06:48 #################################################################
+13:06:48 ###################### DEBUT NOUVEAU CYCLE ######################
+13:06:48 #################################################################
+13:06:48 Pigpio initialisé
+13:06:48 Tentative de connexion au bus I2C...
+13:06:48 Bus I2C connecté
+13:06:48 Tentative de connexion au bus I2C...
+13:06:48 Bus I2C connecté
+13:06:48 Tentative de connexion aux capteurs...
+13:06:48 Hygromètre connecté
+13:06:49 No Unknown temperature sensor with id '' found
+13:06:49 Impossible de se connecter au thermomètre, essai 1/1.
+13:06:50 Baromètre connecté
+13:06:50 Impossible de charger la synthèse vocale ou le codec audio
+13:06:50 Début des mesures : 1/1
+13:06:50 'NoneType' object has no attribute 'get_temperature'
+13:06:50 Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.
+13:06:51 Lecture du message audio...
+13:06:51 Impossible de jouer le message audio car les modules ne sont pas initialisés.
+13:06:51 #################################################################
+13:06:51 ########################### FIN CYCLE ###########################
+13:06:51 #################################################################
+13:07:29 #################################################################
+13:07:29 ###################### DEBUT NOUVEAU CYCLE ######################
+13:07:29 #################################################################
+13:07:29 Pigpio initialisé
+13:07:29 Tentative de connexion au bus I2C...
+13:07:29 Bus I2C connecté
+13:07:29 Tentative de connexion au bus I2C...
+13:07:29 Bus I2C connecté
+13:07:29 Tentative de connexion aux capteurs...
+13:07:29 Hygromètre connecté
+13:07:30 No Unknown temperature sensor with id '' found
+13:07:30 Impossible de se connecter au thermomètre, essai 1/1.
+13:07:31 Baromètre connecté
+13:07:32 Début des mesures : 1/1
+13:07:32 'NoneType' object has no attribute 'get_temperature'
+13:07:32 Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.
+13:07:32 Lecture du message audio...
+13:07:58 Lecture terminée
+13:07:58 #################################################################
+13:07:58 ########################### FIN CYCLE ###########################
+13:07:58 #################################################################
+13:26:01 #################################################################
+13:26:01 ###################### DEBUT NOUVEAU CYCLE ######################
+13:26:01 #################################################################
+13:26:01 Pigpio initialisé
+13:26:01 Tentative de connexion au bus I2C...
+13:26:01 Bus I2C connecté
+13:26:01 Tentative de connexion au bus I2C...
+13:26:01 Bus I2C connecté
+13:26:01 Tentative de connexion aux capteurs...
+13:26:01 Hygromètre connecté
+13:26:02 No Unknown temperature sensor with id '' found
+13:26:02 Impossible de se connecter au thermomètre, essai 1/1.
+13:26:03 Baromètre connecté
+13:26:03 Début des mesures : 1/1
+13:26:03 'NoneType' object has no attribute 'get_temperature'
+13:26:03 Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.
+13:26:06 Lecture du message audio...
+13:26:40 #################################################################
+13:26:40 ###################### DEBUT NOUVEAU CYCLE ######################
+13:26:40 #################################################################
+13:26:40 Pigpio initialisé
+13:26:40 Tentative de connexion au bus I2C...
+13:26:40 Bus I2C connecté
+13:26:40 Tentative de connexion au bus I2C...
+13:26:40 Bus I2C connecté
+13:26:40 Tentative de connexion aux capteurs...
+13:26:40 Hygromètre connecté
+13:26:41 No Unknown temperature sensor with id '' found
+13:26:41 Impossible de se connecter au thermomètre, essai 1/1.
+13:26:42 Baromètre connecté
+13:26:43 Début des mesures : 1/1
+13:26:43 'NoneType' object has no attribute 'get_temperature'
+13:26:43 Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.
+13:26:43 Lecture du message audio...
+13:27:09 Lecture terminée
+13:27:09 #################################################################
+13:27:09 ########################### FIN CYCLE ###########################
+13:27:09 #################################################################
+13:28:01 #################################################################
+13:28:01 ###################### DEBUT NOUVEAU CYCLE ######################
+13:28:01 #################################################################
+13:28:01 Pigpio initialisé
+13:28:01 Tentative de connexion au bus I2C...
+13:28:01 Bus I2C connecté
+13:28:01 Tentative de connexion au bus I2C...
+13:28:01 Bus I2C connecté
+13:28:01 Tentative de connexion aux capteurs...
+13:28:01 Hygromètre connecté
+13:28:02 No Unknown temperature sensor with id '' found
+13:28:02 Impossible de se connecter au thermomètre, essai 1/1.
+13:28:03 Baromètre connecté
+13:28:04 Début des mesures : 1/1
+13:28:04 'NoneType' object has no attribute 'get_temperature'
+13:28:04 Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.
+13:28:09 Lecture du message audio...
+13:28:35 Lecture terminée
+13:28:35 #################################################################
+13:28:35 ########################### FIN CYCLE ###########################
+13:28:35 #################################################################
+13:29:28 #################################################################
+13:29:28 ###################### DEBUT NOUVEAU CYCLE ######################
+13:29:28 #################################################################
+13:29:28 Pigpio initialisé
+13:29:28 Tentative de connexion au bus I2C...
+13:29:28 Bus I2C connecté
+13:29:28 Tentative de connexion au bus I2C...
+13:29:28 Bus I2C connecté
+13:29:28 Tentative de connexion aux capteurs...
+13:29:28 Hygromètre connecté
+13:29:29 No Unknown temperature sensor with id '' found
+13:29:29 Impossible de se connecter au thermomètre, essai 1/1.
+13:29:30 Baromètre connecté
+13:29:31 Impossible de charger la synthèse vocale ou le codec audio
+13:29:31 Début des mesures : 1/1
+13:29:31 'NoneType' object has no attribute 'get_temperature'
+13:29:31 Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.
+13:29:31 Lecture du message audio...
+13:29:31 Impossible de jouer le message audio car les modules ne sont pas initialisés.
+13:29:31 #################################################################
+13:29:31 ########################### FIN CYCLE ###########################
+13:29:31 #################################################################
+13:29:54 #################################################################
+13:29:54 ###################### DEBUT NOUVEAU CYCLE ######################
+13:29:54 #################################################################
+13:29:54 Pigpio initialisé
+13:29:54 Tentative de connexion au bus I2C...
+13:29:54 Bus I2C connecté
+13:29:54 Tentative de connexion au bus I2C...
+13:29:54 Bus I2C connecté
+13:29:54 Tentative de connexion aux capteurs...
+13:29:54 Hygromètre connecté
+13:29:55 No Unknown temperature sensor with id '' found
+13:29:55 Impossible de se connecter au thermomètre, essai 1/1.
+13:29:56 Baromètre connecté
+13:29:56 Début des mesures : 1/1
+13:29:56 'NoneType' object has no attribute 'get_temperature'
+13:29:56 Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.
+13:29:57 Lecture du message audio...
+13:30:22 Lecture terminée
+13:30:22 #################################################################
+13:30:22 ########################### FIN CYCLE ###########################
+13:30:22 #################################################################
+13:31:05 #################################################################
+13:31:05 ###################### DEBUT NOUVEAU CYCLE ######################
+13:31:05 #################################################################
+13:31:05 Pigpio initialisé
+13:31:05 Tentative de connexion au bus I2C...
+13:31:05 Bus I2C connecté
+13:31:05 Tentative de connexion au bus I2C...
+13:31:05 Bus I2C connecté
+13:31:05 Tentative de connexion aux capteurs...
+13:31:05 Hygromètre connecté
+13:31:06 No Unknown temperature sensor with id '' found
+13:31:06 Impossible de se connecter au thermomètre, essai 1/1.
+13:31:08 Baromètre connecté
+13:31:08 Début des mesures : 1/1
+13:31:08 'NoneType' object has no attribute 'get_temperature'
+13:31:08 Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.
+13:31:08 Lecture du message audio...
+13:31:34 Lecture terminée
+13:31:34 #################################################################
+13:31:34 ########################### FIN CYCLE ###########################
+13:31:34 #################################################################
+13:31:43 #################################################################
+13:31:43 ###################### DEBUT NOUVEAU CYCLE ######################
+13:31:43 #################################################################
+13:31:43 Pigpio initialisé
+13:31:43 Tentative de connexion au bus I2C...
+13:31:43 Bus I2C connecté
+13:31:43 Tentative de connexion au bus I2C...
+13:31:43 Bus I2C connecté
+13:31:43 Tentative de connexion aux capteurs...
+13:31:43 Hygromètre connecté
+13:31:44 No Unknown temperature sensor with id '' found
+13:31:44 Impossible de se connecter au thermomètre, essai 1/1.
+13:31:45 Baromètre connecté
+13:31:45 Début des mesures : 1/1
+13:31:45 'NoneType' object has no attribute 'get_temperature'
+13:31:45 Impossible de lire le thermomètre. Prochain essai à l'aide du baromètre.
+13:31:46 Lecture du message audio...
+13:32:12 Lecture terminée
+13:32:12 #################################################################
+13:32:12 ########################### FIN CYCLE ###########################
+13:32:12 #################################################################

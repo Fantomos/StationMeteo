@@ -1,0 +1,8 @@
+11:23:17 | Envoie du bulletin météo
+11:23:17 | Traitement du SMS numéro 1 terminé
+11:23:17 | Traitement du SMS numéro 2...
+11:23:17 | Lecture du SMS : +33780041476 / Message : logs ?
+11:23:17 | Envoi des logs
+
+
+
