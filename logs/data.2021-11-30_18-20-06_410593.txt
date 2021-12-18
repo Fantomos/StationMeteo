@@ -1,8 +1,0 @@
-18:20:06 ('Time', '18h20'),('Temperature', 23.7),('Humidity', 38.2),('Pressure', 998.8460000000001),('Cloud', 1851.9568212297836),('Direction', 0.0),('Speed', 0),('Direction_max', 655.35),('Speed_max', 0)
-19:14:04 ('Time', '19h14'),('Temperature', 24.125),('Humidity', 36.4),('Pressure', 998.934),('Cloud', 1945.3470109119269),('Direction', 0.0),('Speed', 0),('Direction_max', 0.0),('Speed_max', 0)
-19:27:55 ('Time', '19h27'),('Temperature', 24.044999999999998),('Humidity', 35.2),('Pressure', 998.7880000000001),('Cloud', 2004.6598379922223),('Direction', 0.0),('Speed', 0),('Direction_max', 0.0),('Speed_max', 0)
-19:48:07 ('Time', '19h48'),('Temperature', 24.574599999999997),('Humidity', 35.6),('Pressure', 998.798),('Cloud', 1992.0946771859162),('Direction', 0.0),('Speed', 0),('Direction_max', 0.0),('Speed_max', 0)
-19:50:04 ('Time', '19h50'),('Temperature', 24.189799999999998),('Humidity', 35.2),('Pressure', 998.7560000000001),('Cloud', 2006.8091510564652),('Direction', 0.0),('Speed', 0),('Direction_max', 0.0),('Speed_max', 0)
-19:57:25 ('Time', '19h57'),('Temperature', 24.0774),('Humidity', 35.0),('Pressure', 998.7779999999999),('Cloud', 2015.3965786652166),('Direction', 0.0),('Speed', 0),('Direction_max', 0.0),('Speed_max', 0)
-20:00:48 ('Time', '20h00'),('Temperature', 24.267400000000002),('Humidity', 35.0),('Pressure', 998.774),('Cloud', 2018.2313074279905),('Direction', 0.0),('Speed', 0),('Direction_max', 0.0),('Speed_max', 0)
-20:04:39 ('Time', '20h04'),('Temperature', 24.189999999999998),('Humidity', 35.0),('Pressure', 998.8340000000001),('Cloud', 2017.0763033045139),('Direction', 0.05),('Speed', 0),('Direction_max', 0.0),('Speed_max', 0)

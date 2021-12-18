@@ -1,3 +1,0 @@
-17:58:35 ('Time', '17h58'),('Temperature', 23.069799999999997),('Humidity', 26.8),('Pressure', 997.1200000000001),('Cloud', 2469.78736431407),('Direction', 0),('Speed', 0),('Direction_max', 0),('Speed_max', 0)
-18:03:41 ('Time', '18h03'),('Temperature', 23.5),('Humidity', 26.8),('Pressure', 997.1679999999999),('Cloud', 2477.6275498071936),('Direction', 0),('Speed', 0),('Direction_max', 0),('Speed_max', 0)
-18:12:32 ('Time', '18h12'),('Temperature', 23.0998),('Humidity', 27.6),('Pressure', 997.336),('Cloud', 2419.3235394564613),('Direction', 0),('Speed', 0),('Direction_max', 0),('Speed_max', 0)

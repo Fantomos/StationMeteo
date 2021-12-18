@@ -12,10 +12,10 @@ class Gsm:
     # @param config Objet ConfigFile.
     # @param pi Instance de pigpio.
     # @param logger Logger principal.
-    # @param mesures_nbtry Nombres d'essais maximum de l'initialisation des capteurs. La valeur par défaut est 5.
+    # @param init_nbtry Nombres d'essais maximum de l'initialisation des capteurs. La valeur par défaut est 5.
     # @param baudrate Baudrate du bus UART. La valeur par défaut est 115200.
     # @param timeout Timeout du bus UART. La valeur par défaut est 1.
-    def __init__(self, config, pi, logger, mesures_nbtry = 5, baudrate = 115200, timeout = 1):
+    def __init__(self, config, pi, logger, init_nbtry = 5, baudrate = 115200):
         ## Logger principal
         self.logger = logger
         ## Instance de pigpio
@@ -23,7 +23,7 @@ class Gsm:
         ## Objet ConfigFile.
         self.config = config
         self.logger.info("Tentative d'ouverture du port série pour le module GSM...")
-        for i in range(mesures_nbtry):
+        for i in range(init_nbtry):
             try:
                 ## Référence du bus UART.
                 self.handle = pi.serial_open("/dev/ttyAMA0", baudrate)
@@ -36,7 +36,7 @@ class Gsm:
                 break
         
     ## Liste des commandes possible par SMS.
-    command = ["batterie", "seuil","site", "nom", "debut", "début", "eveil" , "éveil","reveil" , "réveil","fin", "extinction","altitude", "logs", "data", "maitre", "maître","aide"]
+    command = ["batterie", "seuil","site", "nom", "debut", "début", "eveil" , "éveil","reveil" , "réveil","fin", "extinction","altitude", "logs", "data", "maitre", "maître","aide","mdp"]
 
     ## Lit les données sur le bus série.
     # @return Retourne les données.
@@ -46,7 +46,7 @@ class Gsm:
             rdy = self.pi.serial_data_available(self.handle)
             start = time()
             while rdy == 0:
-                if time() - start > 10:
+                if time() - start > 60:
                     raise Exception("Timeout : Aucune réponse")
                 rdy = self.pi.serial_data_available(self.handle)
                 sleep(0.001)
@@ -102,7 +102,6 @@ class Gsm:
         self.logger.info("Tentative d'actualiser l'heure depuis le module GSM...")
         buffer = self.sendAT("+CCLK?",0.1) #On récupère la date et heure du module GSM
         try:
-            print(buffer)
             datetime = buffer.split("\"")[1]
             date = datetime.split(",")[0].split("/")
             clock = datetime.split(",")[1].split("+")[0].split(":")
@@ -117,7 +116,7 @@ class Gsm:
     # @param index L'indice du SMS à lire.
     # @return Retourne le message et le numéro de téléphone de l'expéditeur ou un tableau vide en cas d'erreur lors de la lecture.
     def readAllSMS(self):
-        buffer = self.sendAT("+CMGL=\"ALL\"",2) # On demande la lecture de tous les SMS
+        buffer = self.sendAT("+CMGL=\"ALL\"",3) # On demande la lecture de tous les SMS
         try:
             buffer = buffer.split("\r\n\r\n")[:-1]
             list_sms = []
@@ -142,6 +141,22 @@ class Gsm:
     def deleteAllSMS(self):
         return self.sendAT("+CMGD=1,4")
 
+
+    ## Détermine si le module GSM est connecté au réseau
+    # @return Retourne si oui ou non le module est connecté au réseau
+    def isConnected(self):
+        buffer = self.sendAT("+CREG?").split("\r\n")[1].split(",")[1]
+        try:
+            if int(buffer) == 1 or int(buffer) == 5:
+                return True
+            else:
+                return False
+        except Exception as e:
+            self.logger.error(e)
+            self.logger.error("Impossible de connaître l'état de connexion du GSM")
+        
+
+
     ## Renvoie le status d'un SMS.
     # @param sms Le SMS dont l'on souhaite obtenir le status.
     # @return Retourne le status du SMS. 0 = SMS normal (dans tous les cas sauf ceux ci-dessous). 1 = commande pour modifier un paramètre (si le texte contient "=" et une commande valide). 2 = commande pour lire un paramètre (si le texte contient "?" et une commande valide). 3 = mot de passe reçu (si le texte contient le mot de passe). 
@@ -160,14 +175,10 @@ class Gsm:
     # @param command La commande à exécuter.
     # @param sensorsData Le rapport météo sous la forme d'un dictionnaire.
     # @return Retourne la réponse à la commande.
-    def executeGetCommand(self, command, sensorsData):
+    def executeGetCommand(self, command):
         #On récupère ce qui est avant le ?, on le met en minuscule et on enlève les espaces avant et après
         word = command.split("?")[0].lower().strip()
-
         #Selon la commande, on effectue différentes actions
-        if word == "batterie":
-            self.logger.info("Envoi de la tension de la batterie")
-            return "Tension de la batterie : " + str(sensorsData["Battery"]) + " mV"
         if word == "seuil":
             self.logger.info("Envoi du seuil limite de la batterie")
             return "Seuil de la batterie : " + str(self.config.getBatteryLimit()) + " mV"
@@ -185,10 +196,13 @@ class Gsm:
             return "Altitude de la station : " + str(self.config.getSiteAltitude()) + " m"
         elif word == "logs":
             self.logger.info("Envoi des logs")
-            return self.getLogs()
+            return self.getLogs(command.split("?")[1])
         elif word == "data":
             self.logger.info("Envoi des dernières données")
-            return self.getData() #TODO
+            return self.getData(command.split("?")[1])
+        elif word == "batterie":
+            self.logger.info("Envoi de la tension de la batterie")
+            return self.getBattery(command.split("?")[1])
         elif word == "aide":
             self.logger.info("Envoi de la liste des commandes")
             return "Envoyez n'importe quel message pour obtenir le dernier bulletin météo. \nVotre sms peut aussi contenir l'une des commandes suivantes : batterie?, seuil?, nom?, altitude?, eveil?, extinction?, maitre?"
@@ -277,6 +291,19 @@ class Gsm:
             else:
                 self.logger.success("Le seuil de la batterie a été correctement mis à jour : " + str(arg))
                 return "Le seuil de la batterie a été correctement mis a jour : " + str(arg) + " mV"
+        elif word == "mdp":
+            try:
+                if(len(str(arg)) < 4):
+                    raise Exception("Le mot de passe doit faire au moins 5 caractères")
+                else:
+                    self.config.setGsmPswd(str(arg))
+            except Exception as e:
+                self.logger.error(e)
+                self.logger.error("Impossible de mettre à jour le mot de passe")
+                return "Impossible de mettre à jour le mot de passe"
+            else:
+                self.logger.success("Le mot de passe a été correctement mis à jour : " + str(arg))
+                return "Le mot de passe a été correctement mis a jour : " + str(arg)
         
         self.logger.info("Commande inconnue")
         return "Commande inconnue."
@@ -303,7 +330,7 @@ class Gsm:
                         self.logger.info("Permission refusée : ce numéro n'est pas le maître de la station")
                         self.sendSMS(sms[0], "Vous n'avez pas la permission d'effectuer cette commande.")
                 elif status == 2: #S'il s'agit d'une commande de lecture, on renvoie la réponse adaptée
-                    self.sendSMS(sms[0], self.executeGetCommand(sms[1], sensorsData))
+                    self.sendSMS(sms[0], self.executeGetCommand(sms[1]))
                 elif status == 3: #S'il s'agit du mot de passe
                     self.sendSMS(sms[0], "Vous etes désormais le nouveau responsable de la station.")
                     self.config.setGsmMaster(str(sms[0]))
@@ -339,18 +366,47 @@ class Gsm:
     
         #On mesure la tension de la batterie, et s'il elle sous le seuil d'alerte, on envoie un message
         battery = sensorsData['Battery']
-        if battery <= int(self.config.getBatteryLimit())-200 and battery != 0:
+        if battery <= int(self.config.getBatteryLimit())+100 and battery != 0:
             self.sendSMS(self.config.getGsmMaster(), "[" +  sensorsData['Time'] + "]\n/!\\ La tension de la batterie (" + str(battery) + " mV) est proche du seuil (" + str(self.config.getBatteryLimit()) + " mV) , la station risque de ne plus fonctionner correctement. /!\\")
 
-        self.sleep()
-
-    def getLogs(self):
+    def getLogs(self, nb_line):
+        try:
+            nb_line = int(nb_line)
+        except Exception as e:
+            logger.error(e)
+            logger.error("Le paramètre doit être un entier.")
+            nb_line = 1
         pattern = r"(?P<time>.*) \| (?P<message>.*)"  
         output = ""
-        for groups in logger.parse("logs/logs.log", pattern)[:50]:
+        for groups in list(logger.parse("logs/logs.log", pattern))[-nb_line:]:
             output += groups["time"] + " | " + groups["message"] + "\n"
         return output
 
+    def getData(self, nb_line):
+        try:
+            nb_line = int(nb_line)
+        except Exception as e:
+            logger.error(e)
+            logger.error("Le paramètre doit être un entier.")
+            nb_line = 1
+        pattern = r"(?P<time>.*) \| (?P<message>.*)"  
+        output = ""
+        for groups in list(logger.parse("logs/data.log", pattern))[-nb_line:]:
+            output += groups["time"] + " | " + groups["message"] + "\n"
+        return output
+
+    def getBattery(self, nb_line):
+        try:
+            nb_line = int(nb_line)
+        except Exception as e:
+            logger.error(e)
+            logger.error("Le paramètre doit être un entier.")
+            nb_line = 1
+        pattern = r"(?P<time>.*) \| (?P<message>.*)"  
+        output = ""
+        for groups in list(logger.parse("logs/battery.log", pattern))[-nb_line:]:
+            output += groups["time"] + " | " + groups["message"] + "\n"
+        return output
 
 
     ## Crée le message à envoyer par SMS pour transmettre les informations. Pour chaque valeur, on écrit "n/a" si la valeur n'a pas été trouvée.
@@ -358,19 +414,19 @@ class Gsm:
     # @return Retourne le message.
     def createSMS(self, sensorsData):
         temperature = str(round(sensorsData['Temperature'], 1)) if float(sensorsData['Temperature']) < 100 and float(sensorsData['Temperature']) > -50 else "n/a"
-        vitesse_moy = str(int(sensorsData['Speed'])) if float(sensorsData['Speed']) < 300 and float(sensorsData['Speed']) >= 0 else "erreur"
-        vitesse_max = str(int(sensorsData['Speed_max'])) if float(sensorsData['Speed_max']) < 300 and float(sensorsData['Speed_max']) >= 0 else "erreur"
-        direction_moy = str(sensorsData['Direction'])  if float(sensorsData['Direction']) < 360 and float(sensorsData['Direction']) >= 0 else "erreur"
-        direction_max = str(sensorsData['Direction_max']) if float(sensorsData['Direction_max']) < 360 and float(sensorsData['Direction_max']) >= 0 else "erreur"
+        vitesse_moy = str(round(sensorsData['Speed'])) if float(sensorsData['Speed']) < 300 and float(sensorsData['Speed']) >= 0 else "erreur"
+        vitesse_max = str(round(sensorsData['Speed_max'])) if float(sensorsData['Speed_max']) < 300 and float(sensorsData['Speed_max']) >= 0 else "erreur"
+        direction_moy = str(round(sensorsData['Direction']))  if float(sensorsData['Direction']) < 360 and float(sensorsData['Direction']) >= 0 else "erreur"
+        direction_max = str(round(sensorsData['Direction_max'])) if float(sensorsData['Direction_max']) < 360 and float(sensorsData['Direction_max']) >= 0 else "erreur"
         pression = str(int(sensorsData['Pressure'])) if int(sensorsData['Pressure']) > 400 and int(sensorsData['Pressure']) < 1500 else "n/a"
         humidite = str(int(sensorsData['Humidity'])) if int(sensorsData['Humidity']) <= 100 and int(sensorsData['Humidity']) >= 0 else "n/a"
         hauteur_nuages = str(int(sensorsData['Cloud'])) if int(sensorsData['Cloud']) >= 0 else "n/a"
         
         output = (self.config.getSiteName() + " (" + str(self.config.getSiteAltitude()) + " m)") + "\n"
-        output += "[" + str(sensorsData['Time']) + "]\n"
+        output += "[" + str(sensorsData['Time']) + "]\n\n"
+        output += "Vent moyen : " + vitesse_moy + " km/h " + direction_moy + "deg \n\n"
+        output += "Vent maximum : " + vitesse_max + " km/h " + direction_max + "deg \n\n"
         output += "Température : " + temperature + " C\n"
-        output += "Vent moyen : " + vitesse_moy + " km/h " + direction_moy + "\xB0 \n"
-        output += "Vent maximum : " + vitesse_max + " km/h " + direction_max + "\xB0 \n"
         output += "Humidité : " + humidite + " %\n"
         output += "Pression : " + pression + " hPa\n"
         output += "Hauteur des nuages: " + hauteur_nuages + " m"

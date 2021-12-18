@@ -19,9 +19,9 @@ class Radio:
     # @param pi Instance de pigpio.
     # @param speed Vitesse de la lecture du message par la synthèse vocale. La valeur par défaut est 100.
     # @param pitch Pitch de la lecture du message par la synthèse vocale. La valeur par défaut est 40.
-    # @param tw_gpio Numéro de pin pour alimenter le talkie-walkie. La valeur par défaut est 29.
-    # @param ptt_gpio Numéro de pin pour le push-to-talk du talkie-walkie. La valeur par défaut est 31.
-    def __init__(self, config, logger, pi,speed = 100, pitch = 40, tw_gpio = 29, ptt_gpio = 31):
+    # @param tw_gpio Numéro de pin pour alimenter le talkie-walkie. La valeur par défaut est 5.
+    # @param ptt_gpio Numéro de pin pour le push-to-talk du talkie-walkie. La valeur par défaut est 6.
+    def __init__(self, config, logger, pi,speed = 100, pitch = 40, tw_gpio = 5, ptt_gpio = 6):
         ##  Objet ConfigFile.
         self.config = config
         ##  Logger principal.
@@ -52,10 +52,10 @@ class Radio:
     # @return Retourne le message sous la forme d'une chaîne de caractère.
     def createRadioMessage(self,sensorsData):
         temperature = str(round(sensorsData['Temperature'], 1)).replace(".", ",").replace(",0", "") if float(sensorsData['Temperature']) < 100 and float(sensorsData['Temperature']) > -50 else "erreur"
-        direction = str(round(sensorsData['Direction'],0)) if float(sensorsData['Direction']) < 360 and float(sensorsData['Direction']) >= 0 else "erreur"
-        direction_max = str(round(sensorsData['Direction_max'],0)) if float(sensorsData['Direction_max']) < 360 and float(sensorsData['Direction_max']) >= 0 else "erreur"
-        speed = str(round(sensorsData['Speed'], 0)).replace(".", ",").replace(",0", "") if float(sensorsData['Speed']) < 300 and float(sensorsData['Speed']) >= 0 else "erreur"
-        speed_max = str(round(sensorsData['Speed_max'], 0)).replace(".", ",").replace(",0", "") if float(sensorsData['Speed_max']) < 300 and float(sensorsData['Speed']) >= 0 else "erreur"
+        direction = str(int(round(sensorsData['Direction'],0))) if float(sensorsData['Direction']) < 360 and float(sensorsData['Direction']) >= 0 else "erreur"
+        direction_max = str(int(round(sensorsData['Direction_max'],0))) if float(sensorsData['Direction_max']) < 360 and float(sensorsData['Direction_max']) >= 0 else "erreur"
+        speed = str(int(round(sensorsData['Speed'], 0))).replace(".", ",").replace(",0", "") if float(sensorsData['Speed']) < 300 and float(sensorsData['Speed']) >= 0 else "erreur"
+        speed_max = str(int(round(sensorsData['Speed_max'], 0))).replace(".", ",").replace(",0", "") if float(sensorsData['Speed_max']) < 300 and float(sensorsData['Speed']) >= 0 else "erreur"
         output = "Site de. " + self.config.getSiteName() + ". "
         output += "Vent moyen : " + speed + " " + " kilomètres par heure . . " + direction + " degrés . "
         output += "Vent maximal : " + speed_max + " " + " kilomètres par heure . . " + direction_max + " degrés . "

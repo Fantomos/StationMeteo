@@ -1,0 +1,116 @@
+16:20:16 | #################################################################
+16:20:16 | ###################### DEBUT NOUVEAU CYCLE ######################
+16:20:16 | #################################################################
+16:20:16 | Pigpio initialisé
+16:20:16 | Tentative de connexion au bus I2C...
+16:20:16 | Bus I2C connecté
+16:20:16 | Tentative de connexion au bus I2C...
+16:20:16 | Bus I2C connecté
+16:20:16 | Tentative de connexion aux capteurs...
+16:20:16 | Baromètre connecté
+16:20:16 | Tentative d'ouverture du port série pour le module GSM...
+16:20:16 | Port série ouvert
+16:20:18 | Données bytearray(b'\x0c') reçues sur le registre 1
+16:20:19 | Données transmises sur le registre 1, données=13)
+16:20:19 | Configuration du module GSM...
+16:20:20 | Module GSM configuré
+16:20:20 | Tentative d'actualiser l'heure depuis le module GSM...
+16:20:21 | Données transmises sur le registre 0, données=1639581620)
+16:20:22 | Requête des données de vent à l'ATTINY
+16:20:23 | Données transmises sur le registre 0, données=17)
+16:20:23 | Début des mesures de l'humidité...
+16:20:23 | Début des mesures du thermomètre...
+16:20:23 | Début des mesures de la pression...
+16:20:25 | Lecture de l'humidité terminée.
+16:20:26 | Lecture de l'humidité terminée.
+16:20:32 | Lecture de la température terminée.
+16:20:32 | Récupération des données de vent à l'ATTINY
+16:20:33 | Données bytearray(b'\re\xff\xff\rQ\xff\xff') reçues
+16:20:33 | Lecture de la tension de la batterie...
+16:20:35 | Données bytearray(b'\x00\x00/(') reçues sur le registre 6
+16:20:35 | Lecture de la batterie terminée
+16:20:35 | Lecture du message audio...
+16:20:35 | Analyse des SMS reçus...
+16:20:36 | Données transmises sur le registre 5, données=[0, 0, 0, 184, 0, 184, 32, 85, 3, 248, 47, 40])
+16:20:36 | Envoie réussi au réseau Sigfox
+16:20:38 | 0 SMS reçus
+16:20:38 | Suppression des SMS terminée
+16:20:39 | Données transmises sur le registre 3, données=19)
+16:20:40 | Données transmises sur le registre 4, données=5)
+16:20:41 | Données transmises sur le registre 7, données=11000)
+16:20:41 | Paramètres mis à jours sur le MKRFOX
+16:23:02 | #################################################################
+16:23:02 | ###################### DEBUT NOUVEAU CYCLE ######################
+16:23:02 | #################################################################
+16:23:02 | Pigpio initialisé
+16:23:02 | Tentative de connexion au bus I2C...
+16:23:02 | Bus I2C connecté
+16:23:02 | Tentative de connexion au bus I2C...
+16:23:02 | Bus I2C connecté
+16:23:02 | Tentative de connexion aux capteurs...
+16:23:02 | Baromètre connecté
+16:23:02 | Tentative d'ouverture du port série pour le module GSM...
+16:23:02 | Port série ouvert
+16:23:05 | Données bytearray(b'\x08') reçues sur le registre 1
+16:23:06 | Données transmises sur le registre 1, données=9)
+16:23:08 | Données bytearray(b'a\xba\x08Z') reçues sur le registre 0
+16:23:08 | Date et heure actualisées depuis le MKRFOX
+16:23:08 | Requête des données de vent à l'ATTINY
+16:23:09 | Données transmises sur le registre 0, données=17)
+16:23:09 | Début des mesures de l'humidité...
+16:23:09 | Début des mesures du thermomètre...
+16:23:09 | Début des mesures de la pression...
+16:23:12 | Lecture de l'humidité terminée.
+16:23:12 | Lecture de l'humidité terminée.
+16:23:18 | Lecture de la température terminée.
+16:23:18 | Récupération des données de vent à l'ATTINY
+16:23:19 | Données bytearray(b'\r_\xff\xff\rQ\xff\xff') reçues
+16:23:19 | Lecture de la tension de la batterie...
+16:23:21 | Données bytearray(b'\x00\x00/\n') reçues sur le registre 6
+16:23:21 | Lecture de la batterie terminée
+16:23:21 | Lecture du message audio...
+16:23:21 | Analyse des SMS reçus...
+16:23:22 | Données transmises sur le registre 5, données=[0, 0, 0, 184, 0, 184, 32, 85, 3, 248, 47, 10])
+16:23:22 | Envoie réussi au réseau Sigfox
+16:23:24 | 0 SMS reçus
+16:23:24 | Suppression des SMS terminée
+16:23:26 | Données transmises sur le registre 3, données=19)
+16:23:27 | Données transmises sur le registre 4, données=5)
+16:23:28 | Données transmises sur le registre 7, données=11000)
+16:23:28 | Paramètres mis à jours sur le MKRFOX
+16:23:44 | Lecture terminée
+16:23:45 | Données transmises sur le registre 1, données=8)
+16:23:45 | Extinction du raspberry immédiate
+16:23:45 | #################################################################
+16:23:45 | ########################### FIN CYCLE ###########################
+16:23:45 | #################################################################
+16:23:45 | 
+
+
+16:27:17 | #################################################################
+16:27:17 | ###################### DEBUT NOUVEAU CYCLE ######################
+16:27:17 | #################################################################
+16:27:17 | Pigpio initialisé
+16:27:17 | Tentative de connexion au bus I2C...
+16:27:17 | Bus I2C connecté
+16:27:17 | Tentative de connexion au bus I2C...
+16:27:17 | Bus I2C connecté
+16:27:17 | Tentative de connexion aux capteurs...
+16:27:17 | Baromètre connecté
+16:27:17 | Tentative d'ouverture du port série pour le module GSM...
+16:27:17 | Port série ouvert
+16:27:19 | Données bytearray(b'\x08') reçues sur le registre 1
+16:27:20 | Données transmises sur le registre 1, données=9)
+16:27:22 | Données bytearray(b'a\xba\tY') reçues sur le registre 0
+16:27:21 | Date et heure actualisées depuis le MKRFOX
+16:27:23 | Requête des données de vent à l'ATTINY
+16:27:24 | Données transmises sur le registre 0, données=17)
+16:27:24 | Début des mesures de l'humidité...
+16:27:24 | Début des mesures du thermomètre...
+16:27:24 | Début des mesures de la pression...
+16:27:27 | Lecture de l'humidité terminée.
+16:27:28 | Lecture de l'humidité terminée.
+16:27:33 | Lecture de la température terminée.
+16:27:33 | Récupération des données de vent à l'ATTINY
+16:27:34 | Données bytearray(b'\r`\xff\xff\rQ\xff\xff') reçues
+16:27:34 | Lecture de la tension de la batterie...

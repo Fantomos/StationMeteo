@@ -1,5 +1,0 @@
-15:58:56 ('Time', '15h58'),('Temperature', 23.15),('Humidity', 27.0),('Pressure', 996.81),('Cloud', 2458.3662491064897),('Direction', 0.0),('Speed', 0),('Direction_max', 0.0),('Speed_max', 0)
-13:01:04 ('Time', '13h01'),('Temperature', 23.5935),('Humidity', 26.0),('Pressure', 996.95),('Cloud', 2531.888509185453),('Direction', 0.0),('Speed', 0),('Direction_max', 0.0),('Speed_max', 0)
-13:04:02 ('Time', '13h04'),('Temperature', 23.8125),('Humidity', 26.0),('Pressure', 996.94),('Cloud', 2535.9665779780466),('Direction', 0.0),('Speed', 0),('Direction_max', 0.0),('Speed_max', 0)
-16:09:22 ('Time', '16h09'),('Temperature', 23.8125),('Humidity', 28.0),('Pressure', 996.92),('Cloud', 2406.9178464494134),('Direction', 0.0),('Speed', 0),('Direction_max', 0.0),('Speed_max', 0)
-16:10:31 ('Time', '16h10'),('Temperature', 23.2),('Humidity', 28.0),('Pressure', 996.94),('Cloud', 2396.0773102645785),('Direction', 0.0),('Speed', 0),('Direction_max', 0.0),('Speed_max', 0)
